@@ -7,6 +7,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 
@@ -42,6 +43,9 @@ public class DigitalniDvojcek extends Game {
 //        batch.draw(image, 140, 210);
 //        batch.end();
 //    }
+    public SpriteBatch getBatch() {
+        return batch;
+    }
 
     @Override
     public void dispose() {
