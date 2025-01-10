@@ -22,6 +22,7 @@ public class DigitalniDvojcek extends Game {
 
     // Dev branch :D
 
+
     @Override
     public void create() {
         batch = new SpriteBatch();
@@ -33,6 +34,15 @@ public class DigitalniDvojcek extends Game {
         assetManager.finishLoading();
 
         setScreen(new GameplayScreen(this)); //to je temporary pol naj bo nastavleno na main screen al kaj pac bo
+
+
+        // GAME INFO
+        System.out.println("\n\n|-----------------------------------------------|");
+        System.out.println("|                  GAME CONTROLS                |");
+        System.out.println("|-----------------------------------------------|");
+        System.out.println("|  Green player moves with WASD, shoots with Q  |");
+        System.out.println("|Red player moves with ARROW KEYS, shoots with M|");
+        System.out.println("|-----------------------------------------------|");
     }
 
 //    @Override

@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
+import si.um.feri.kompajler.assets.RegionNames;
 import si.um.feri.kompajler.config.GameConfig;
 
 public class Bullet {
@@ -17,7 +18,7 @@ public class Bullet {
     public boolean damageFriendly;
 
     public Bullet(float x, float y, float velocityX, float velocityY, TextureAtlas atlas, int playerId) {
-        this.textureRegion = atlas.findRegion("bullet"); // Assuming "bullet" is the name of the region in the atlas
+        this.textureRegion = atlas.findRegion(RegionNames.BULLET); // Assuming "bullet" is the name of the region in the atlas
         float width = textureRegion.getRegionWidth() * 1.5f;
         float height = textureRegion.getRegionHeight() * 1.5f;
         this.speed = GameConfig.BULLET_SPEED;

@@ -13,7 +13,14 @@ bullet
   index: -1
 tank-bottom-green
   rotate: false
-  xy: 94, 58
+  xy: 186, 58
+  size: 65, 46
+  orig: 65, 46
+  offset: 0, 0
+  index: -1
+tank-bottom-red
+  rotate: false
+  xy: 186, 10
   size: 65, 46
   orig: 65, 46
   offset: 0, 0
@@ -21,6 +28,13 @@ tank-bottom-green
 tank-top-green
   rotate: false
   xy: 2, 14
+  size: 90, 90
+  orig: 90, 90
+  offset: 0, 0
+  index: -1
+tank-top-red
+  rotate: false
+  xy: 94, 14
   size: 90, 90
   orig: 90, 90
   offset: 0, 0

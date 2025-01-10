@@ -32,6 +32,13 @@ public class Player {
             float height = tankBottom.getRegionHeight() * 1.2f;
             this.rectangle = new Rectangle(50, 50, width, height);
         }
+        if (id == 1) {
+            this.tankBottom = atlas.findRegion(RegionNames.TANK_BOTTOM_RED);
+            this.tankTop = atlas.findRegion(RegionNames.TANK_TOP_RED);
+            float width = tankBottom.getRegionWidth() * 1.2f;
+            float height = tankBottom.getRegionHeight() * 1.2f;
+            this.rectangle = new Rectangle(1440, 1430, width, height);
+        }
         this.rotation = 0;
         moving = false;
         this.atlas = atlas;
@@ -107,7 +114,7 @@ public class Player {
                 moving = true;
             }
 
-            if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
                 System.out.println("PEW");
                 shoot();
             }
@@ -116,15 +123,15 @@ public class Player {
         }
         else if (id == 1) {
             moving = false;
-            if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+            if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
                 rotation += 200 * deltaTime; // Rotate left
                 moving = true;
             }
-            if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
                 rotation -= 200 * deltaTime; // Rotate right
                 moving = true;
             }
-            if (Gdx.input.isKeyPressed(Input.Keys.W) && !stopMovement) {
+            if (Gdx.input.isKeyPressed(Input.Keys.UP) && !stopMovement) {
                 float radians = (float) Math.toRadians(rotation);
                 float deltaX = (float) Math.cos(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
                 float deltaY = (float) Math.sin(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
@@ -132,13 +139,18 @@ public class Player {
                 rectangle.setPosition(rectangle.x + deltaX, rectangle.y + deltaY);
                 moving = true;
             }
-            if (Gdx.input.isKeyPressed(Input.Keys.S) && !stopMovement) {
+            if (Gdx.input.isKeyPressed(Input.Keys.DOWN) && !stopMovement) {
                 float radians = (float) Math.toRadians(rotation);
                 float deltaX = (float) Math.cos(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
                 float deltaY = (float) Math.sin(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
 
                 rectangle.setPosition(rectangle.x - deltaX, rectangle.y - deltaY);
                 moving = true;
+            }
+
+            if (Gdx.input.isKeyJustPressed(Input.Keys.M)) {
+                System.out.println("PEW");
+                shoot();
             }
 
             stopMovement = false;

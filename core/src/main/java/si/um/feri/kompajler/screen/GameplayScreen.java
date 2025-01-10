@@ -84,15 +84,21 @@ public class GameplayScreen implements Screen {
         gameplayAtlas = assetManager.get(AssetDescriptors.GAMEPLAY_ATLAS);
 
         player1 = new Player(gameplayAtlas, 0);
+        player2 = new Player(gameplayAtlas, 1);
         GameManager.getInstance().players.add(player1);
+        GameManager.getInstance().players.add(player2);
     }
 
     @Override
     public void render(float delta) {
         float deltaTime = Gdx.graphics.getDeltaTime();
-        player1.playerMovement(deltaTime);
 
-        mapBoundsHandlerPlayer.constrainPlayer(player1);
+        //System.out.println(player1.getBounds());
+
+        for (Player player : GameManager.getInstance().players) {
+            player.playerMovement(deltaTime);
+            mapBoundsHandlerPlayer.constrainPlayer(player);
+        }
 
         GameManager.getInstance().updateBullets(deltaTime);
 
@@ -110,11 +116,14 @@ public class GameplayScreen implements Screen {
         shapeRenderer.end();
 
         // player
-        game.getBatch().setProjectionMatrix(gameplayCamera.combined);
-        game.getBatch().begin();
-        game.getBatch().draw(player1.getTankBottom(), player1.rectangle.x, player1.rectangle.y, player1.rectangle.width / 2, player1.rectangle.height / 2, player1.rectangle.width, player1.rectangle.height, 1, 1, player1.getRotation());
-        game.getBatch().draw(player1.getTankTop(), player1.rectangle.x, player1.rectangle.y, player1.rectangle.width / 2, player1.rectangle.height / 2, player1.rectangle.width, player1.rectangle.height, 1, 1, player1.getRotation());
-        game.getBatch().end();
+
+        for (Player player : GameManager.getInstance().players) {
+            game.getBatch().setProjectionMatrix(gameplayCamera.combined);
+            game.getBatch().begin();
+            game.getBatch().draw(player.getTankBottom(), player.rectangle.x, player.rectangle.y, player.rectangle.width / 2, player.rectangle.height / 2, player.rectangle.width, player.rectangle.height, 1, 1, player.getRotation());
+            game.getBatch().draw(player.getTankTop(), player.rectangle.x, player.rectangle.y, player.rectangle.width / 2, player.rectangle.height / 2, player.rectangle.width, player.rectangle.height, 1, 1, player.getRotation());
+            game.getBatch().end();
+        }
 
         game.getBatch().begin();
         for (Bullet bullet : GameManager.getInstance().getBullets()) {

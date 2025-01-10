@@ -36,6 +36,7 @@ public class GameManager {
                 if (bullet.getBounds().overlaps(player.getBounds()) && bullet.playerId != player.getId()) {
                     player.damage();
                     bullets.removeIndex(i);
+                    System.out.println(player.getId() + "|" + player.getHitpoints());
                     break;
                 }
                 if (bullet.getBounds().overlaps(player.getBounds()) && bullet.damageFriendly) {
