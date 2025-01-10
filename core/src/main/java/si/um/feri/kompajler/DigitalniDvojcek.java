@@ -48,6 +48,10 @@ public class DigitalniDvojcek extends Game {
         return batch;
     }
 
+    public AssetManager getAssetManager() {
+        return assetManager;
+    }
+
     @Override
     public void dispose() {
         batch.dispose();

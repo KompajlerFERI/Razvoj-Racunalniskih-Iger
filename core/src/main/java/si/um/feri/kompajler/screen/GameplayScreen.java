@@ -2,7 +2,9 @@ package si.um.feri.kompajler.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
@@ -14,7 +16,9 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 import si.um.feri.kompajler.DigitalniDvojcek;
+import si.um.feri.kompajler.assets.AssetDescriptors;
 import si.um.feri.kompajler.config.GameConfig;
+import si.um.feri.kompajler.gameplay.Player;
 
 public class GameplayScreen implements Screen {
     private final DigitalniDvojcek game;
@@ -29,8 +33,14 @@ public class GameplayScreen implements Screen {
     private TiledMap tiledMap;
     private OrthogonalTiledMapRenderer tiledMapRenderer;
 
+    private final AssetManager assetManager;
+
+    private TextureAtlas gameplayAtlas;
+    private Player player1;
+
     public GameplayScreen(DigitalniDvojcek game) {
         this.game = game;
+        assetManager = game.getAssetManager();
     }
 
     @Override
@@ -54,23 +64,39 @@ public class GameplayScreen implements Screen {
         tiledMapRenderer.setView(gameplayCamera);
 
         shapeRenderer = new ShapeRenderer();
+
+
+        assetManager.load(AssetDescriptors.GAMEPLAY_ATLAS);
+        assetManager.finishLoading();
+
+        gameplayAtlas = assetManager.get(AssetDescriptors.GAMEPLAY_ATLAS);
+
+        player1 = new Player(gameplayAtlas, 0);
     }
 
     @Override
     public void render(float delta) {
         float deltaTime = Gdx.graphics.getDeltaTime();
+        player1.playerMovement(deltaTime);
         ScreenUtils.clear(1f, 1f, 1f, 1f);
 
         gameplayCamera.update();
         tiledMapRenderer.setView(gameplayCamera);
         tiledMapRenderer.render();
 
-        // Draw black rectangle
+        // To je za gori nad mapo score
         shapeRenderer.setProjectionMatrix(gameplayCamera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(0, 0, 0, 1);
         shapeRenderer.rect(0, gameplayCamera.viewportHeight - 100, GameConfig.WIDTH * 4, 100);
         shapeRenderer.end();
+
+        // player
+        game.getBatch().setProjectionMatrix(gameplayCamera.combined);
+        game.getBatch().begin();
+        game.getBatch().draw(player1.getTankBottom(), player1.rectangle.x, player1.rectangle.y, player1.rectangle.width / 2, player1.rectangle.height / 2, player1.rectangle.width, player1.rectangle.height, 1, 1, player1.getRotation());
+        game.getBatch().draw(player1.getTankTop(), player1.rectangle.x, player1.rectangle.y, player1.rectangle.width / 2, player1.rectangle.height / 2, player1.rectangle.width, player1.rectangle.height, 1, 1, player1.getRotation());
+        game.getBatch().end();
     }
 
     @Override
