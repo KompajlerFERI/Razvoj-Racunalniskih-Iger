@@ -1,22 +1,18 @@
 package si.um.feri.kompajler.gameplay;
 
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
-import com.badlogic.gdx.math.Rectangle;
 
 import si.um.feri.kompajler.config.GameConfig;
 
-public class MapBoundsHandler {
+public class MapBoundsHandlerPlayer {
     private final TiledMapTileLayer borders;
 
-    public MapBoundsHandler(TiledMapTileLayer borders) {
+    public MapBoundsHandlerPlayer(TiledMapTileLayer borders) {
         this.borders = borders;
     }
 
     public void constrainPlayer(Player player) {
-        int tileWidth = borders.getTileWidth();
-        int tileHeight = borders.getTileHeight();
-
-        System.out.println(player.rectangle.x + " " + player.rectangle.y);
+        //System.out.println(player.rectangle.x + " " + player.rectangle.y);
 
         // Check each corner of the player's rectangle
         if (isTileBlocked(player.rectangle.x, player.rectangle.y) ||
@@ -24,7 +20,6 @@ public class MapBoundsHandler {
             isTileBlocked(player.rectangle.x, player.rectangle.y + player.rectangle.height) ||
             isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y + player.rectangle.height)) {
 
-            // Move the player back incrementally until they are no longer colliding
             while (isTileBlocked(player.rectangle.x, player.rectangle.y) ||
                 isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y) ||
                 isTileBlocked(player.rectangle.x, player.rectangle.y + player.rectangle.height) ||

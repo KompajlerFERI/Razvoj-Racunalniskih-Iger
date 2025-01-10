@@ -18,7 +18,10 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import si.um.feri.kompajler.DigitalniDvojcek;
 import si.um.feri.kompajler.assets.AssetDescriptors;
 import si.um.feri.kompajler.config.GameConfig;
-import si.um.feri.kompajler.gameplay.MapBoundsHandler;
+import si.um.feri.kompajler.gameplay.Bullet;
+import si.um.feri.kompajler.gameplay.GameManager;
+import si.um.feri.kompajler.gameplay.MapBoundsHandlerBullet;
+import si.um.feri.kompajler.gameplay.MapBoundsHandlerPlayer;
 import si.um.feri.kompajler.gameplay.Player;
 
 public class GameplayScreen implements Screen {
@@ -40,7 +43,8 @@ public class GameplayScreen implements Screen {
     private Player player1;
     private Player player2;
 
-    private MapBoundsHandler mapBoundsHandler;
+    private MapBoundsHandlerPlayer mapBoundsHandlerPlayer;
+    private MapBoundsHandlerBullet mapBoundsHandlerBullet;
 
     public GameplayScreen(DigitalniDvojcek game) {
         this.game = game;
@@ -58,7 +62,8 @@ public class GameplayScreen implements Screen {
         float mapHeight = layer.getHeight() * layer.getTileHeight();
 
         TiledMapTileLayer borders = (TiledMapTileLayer) tiledMap.getLayers().get("Borders");
-        mapBoundsHandler = new MapBoundsHandler(borders);
+        mapBoundsHandlerPlayer = new MapBoundsHandlerPlayer(borders);
+        mapBoundsHandlerBullet = new MapBoundsHandlerBullet(borders);
 
         gameplayViewport = new FitViewport(mapWidth, mapHeight);
         stage = new Stage(gameplayViewport, game.getBatch());
@@ -86,7 +91,9 @@ public class GameplayScreen implements Screen {
         float deltaTime = Gdx.graphics.getDeltaTime();
         player1.playerMovement(deltaTime);
 
-        mapBoundsHandler.constrainPlayer(player1);
+        mapBoundsHandlerPlayer.constrainPlayer(player1);
+
+        GameManager.getInstance().updateBullets(deltaTime);
 
         ScreenUtils.clear(1f, 1f, 1f, 1f);
 
@@ -106,6 +113,13 @@ public class GameplayScreen implements Screen {
         game.getBatch().begin();
         game.getBatch().draw(player1.getTankBottom(), player1.rectangle.x, player1.rectangle.y, player1.rectangle.width / 2, player1.rectangle.height / 2, player1.rectangle.width, player1.rectangle.height, 1, 1, player1.getRotation());
         game.getBatch().draw(player1.getTankTop(), player1.rectangle.x, player1.rectangle.y, player1.rectangle.width / 2, player1.rectangle.height / 2, player1.rectangle.width, player1.rectangle.height, 1, 1, player1.getRotation());
+        game.getBatch().end();
+
+        game.getBatch().begin();
+        for (Bullet bullet : GameManager.getInstance().getBullets()) {
+            mapBoundsHandlerBullet.handleBulletCollision(bullet, deltaTime);
+            game.getBatch().draw(bullet.getTextureRegion(), bullet.getBounds().x, bullet.getBounds().y, bullet.getBounds().width, bullet.getBounds().height);
+        }
         game.getBatch().end();
     }
 
