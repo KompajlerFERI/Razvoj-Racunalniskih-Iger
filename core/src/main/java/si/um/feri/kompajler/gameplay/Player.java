@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 
+import org.w3c.dom.css.Rect;
+
 import si.um.feri.kompajler.assets.RegionNames;
 import si.um.feri.kompajler.config.GameConfig;
 
@@ -22,7 +24,7 @@ public class Player {
 
     public Player(TextureAtlas atlas, int id) {
         this.id = id;
-        this.hitpoints = 1;
+        this.hitpoints = 100;
         if (id == 0) {
             this.tankBottom = atlas.findRegion(RegionNames.TANK_BOTTOM_GREEN);
             this.tankTop = atlas.findRegion(RegionNames.TANK_TOP_GREEN);
@@ -48,6 +50,15 @@ public class Player {
     public float getRotation() {
         return rotation;
     }
+    public void damage() {
+        hitpoints--;
+    }
+    public Rectangle getBounds() {
+        return rectangle;
+    }
+    public int getId() {
+        return id;
+    }
 
     public void shoot() {
         // Bullet dimensions
@@ -65,7 +76,7 @@ public class Player {
         float velocityY = (float) Math.sin(radians) * bulletSpeed;
 
         // Create and add bullet to the bullets array
-        Bullet bullet = new Bullet(bulletX, bulletY, velocityX, velocityY, atlas);
+        Bullet bullet = new Bullet(bulletX, bulletY, velocityX, velocityY, atlas, id);
         GameManager.getInstance().bullets.add(bullet);
     }
     public void playerMovement(float deltaTime) {

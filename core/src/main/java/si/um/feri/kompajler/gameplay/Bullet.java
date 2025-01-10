@@ -13,8 +13,10 @@ public class Bullet {
     private float speed;
     private TextureRegion textureRegion;
     public int count;
+    public int playerId;
+    public boolean damageFriendly;
 
-    public Bullet(float x, float y, float velocityX, float velocityY, TextureAtlas atlas) {
+    public Bullet(float x, float y, float velocityX, float velocityY, TextureAtlas atlas, int playerId) {
         this.textureRegion = atlas.findRegion("bullet"); // Assuming "bullet" is the name of the region in the atlas
         float width = textureRegion.getRegionWidth() * 1.5f;
         float height = textureRegion.getRegionHeight() * 1.5f;
@@ -22,6 +24,8 @@ public class Bullet {
         this.bounds = new Rectangle(x, y, width, height);
         this.velocity = new Vector2(velocityX, velocityY).nor().scl(speed);
         this.count = 5;
+        this.damageFriendly = false;
+        this.playerId = playerId;
     }
 
     public Rectangle getBounds() {

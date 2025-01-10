@@ -44,6 +44,7 @@ public class MapBoundsHandlerBullet {
                     bullet.bounceY();
                     bullet.setPosition(bulletBounds.x, bulletBounds.y + bulletVelocity.y * deltaTime);
                 }
+                bullet.damageFriendly = true;
                 bullet.count--;
                 break;
             }

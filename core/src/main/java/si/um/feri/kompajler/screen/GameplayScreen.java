@@ -84,6 +84,7 @@ public class GameplayScreen implements Screen {
         gameplayAtlas = assetManager.get(AssetDescriptors.GAMEPLAY_ATLAS);
 
         player1 = new Player(gameplayAtlas, 0);
+        GameManager.getInstance().players.add(player1);
     }
 
     @Override
