@@ -2,6 +2,7 @@ package si.um.feri.kompajler.gameplay;
 
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
@@ -24,7 +25,7 @@ public class Bullet {
         this.speed = GameConfig.BULLET_SPEED;
         this.bounds = new Rectangle(x, y, width, height);
         this.velocity = new Vector2(velocityX, velocityY).nor().scl(speed);
-        this.count = 5;
+        this.count = MathUtils.random(3, 7);
         this.damageFriendly = false;
         this.playerId = playerId;
     }

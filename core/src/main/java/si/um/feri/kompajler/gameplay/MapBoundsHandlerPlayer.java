@@ -12,35 +12,29 @@ public class MapBoundsHandlerPlayer {
     }
 
     public void constrainPlayer(Player player) {
-        //System.out.println(player.rectangle.x + " " + player.rectangle.y);
-
         // Check each corner of the player's rectangle
         if (isTileBlocked(player.rectangle.x, player.rectangle.y) ||
             isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y) ||
             isTileBlocked(player.rectangle.x, player.rectangle.y + player.rectangle.height) ||
             isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y + player.rectangle.height)) {
 
-            while (isTileBlocked(player.rectangle.x, player.rectangle.y) ||
-                isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y) ||
-                isTileBlocked(player.rectangle.x, player.rectangle.y + player.rectangle.height) ||
+            // Adjust player's position based on the direction of movement
+            if (isTileBlocked(player.rectangle.x, player.rectangle.y) ||
+                isTileBlocked(player.rectangle.x, player.rectangle.y + player.rectangle.height)) {
+                player.rectangle.x += Math.signum(GameConfig.PLAYER_SPEED);
+            } else if (isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y) ||
                 isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y + player.rectangle.height)) {
-                if (player.rectangle.x > 500 ) {
-                    player.rectangle.x -= Math.signum(GameConfig.PLAYER_SPEED);
-                    //player.rectangle.y -= Math.signum(GameConfig.PLAYER_SPEED);
-                }
-                if (player.rectangle.x < 500 ) {
-                    player.rectangle.x += Math.signum(GameConfig.PLAYER_SPEED);
-                    //player.rectangle.y += Math.signum(GameConfig.PLAYER_SPEED);
-                }
-                if (player.rectangle.y > 500 ) {
-                    //player.rectangle.x -= Math.signum(GameConfig.PLAYER_SPEED);
-                    player.rectangle.y -= Math.signum(GameConfig.PLAYER_SPEED);
-                }
-                if (player.rectangle.y < 500 ) {
-                    //player.rectangle.x += Math.signum(GameConfig.PLAYER_SPEED);
-                    player.rectangle.y += Math.signum(GameConfig.PLAYER_SPEED);
-                }
+                player.rectangle.x -= Math.signum(GameConfig.PLAYER_SPEED);
             }
+
+            if (isTileBlocked(player.rectangle.x, player.rectangle.y) ||
+                isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y)) {
+                player.rectangle.y += Math.signum(GameConfig.PLAYER_SPEED);
+            } else if (isTileBlocked(player.rectangle.x, player.rectangle.y + player.rectangle.height) ||
+                isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y + player.rectangle.height)) {
+                player.rectangle.y -= Math.signum(GameConfig.PLAYER_SPEED);
+            }
+
             player.stopMovement = true;
         }
     }

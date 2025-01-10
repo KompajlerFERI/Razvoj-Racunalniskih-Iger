@@ -32,6 +32,9 @@ public class MapBoundsHandlerBullet {
 
         for (Rectangle wall : walls) {
             if (bulletBounds.overlaps(wall)) {
+                float previousX = bulletBounds.x - bulletVelocity.x * deltaTime;
+                float previousY = bulletBounds.y - bulletVelocity.y * deltaTime;
+
                 float overlapX = Math.min(bulletBounds.x + bulletBounds.width, wall.x + wall.width) -
                     Math.max(bulletBounds.x, wall.x);
                 float overlapY = Math.min(bulletBounds.y + bulletBounds.height, wall.y + wall.height) -
@@ -39,15 +42,33 @@ public class MapBoundsHandlerBullet {
 
                 if (overlapX < overlapY) {
                     bullet.bounceX();
-                    bullet.setPosition(bulletBounds.x + bulletVelocity.x * deltaTime, bulletBounds.y);
+                    // Adjust position to the previous position plus a small offset
+                    bullet.setPosition(previousX, bulletBounds.y);
+                    // Adjust further if needed to ensure no overlap
+                    if (bulletBounds.overlaps(wall)) {
+                        if (bulletVelocity.x > 0) {
+                            bullet.setPosition(wall.x - bulletBounds.width - 0.1f, bulletBounds.y);
+                        } else {
+                            bullet.setPosition(wall.x + wall.width + 0.1f, bulletBounds.y);
+                        }
+                    }
                 } else {
                     bullet.bounceY();
-                    bullet.setPosition(bulletBounds.x, bulletBounds.y + bulletVelocity.y * deltaTime);
+                    bullet.setPosition(bulletBounds.x, previousY);
+                    if (bulletBounds.overlaps(wall)) {
+                        if (bulletVelocity.y > 0) {
+                            bullet.setPosition(bulletBounds.x, wall.y - bulletBounds.height - 0.1f);
+                        } else {
+                            bullet.setPosition(bulletBounds.x, wall.y + wall.height + 0.1f);
+                        }
+                    }
                 }
+
                 bullet.damageFriendly = true;
                 bullet.count--;
                 break;
             }
         }
     }
+
 }
