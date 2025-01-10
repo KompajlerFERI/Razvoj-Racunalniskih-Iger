@@ -16,16 +16,19 @@ public class Player {
     private int id;
     public Rectangle rectangle;
     private float rotation;
+    public boolean moving;
+    public boolean stopMovement;
 
     public Player(TextureAtlas atlas, int id) {
         this.id = id;
         this.hitpoints = 1;
         this.tankBottom = atlas.findRegion(RegionNames.TANK_BOTTOM_GREEN);
         this.tankTop = atlas.findRegion(RegionNames.TANK_TOP_GREEN);
-        float width = tankBottom.getRegionWidth() * 1.5f;
-        float height = tankBottom.getRegionHeight() * 1.5f;
+        float width = tankBottom.getRegionWidth() * 1.2f;
+        float height = tankBottom.getRegionHeight() * 1.2f;
         this.rectangle = new Rectangle(50, 50, width, height);
         this.rotation = 0;
+        moving = false;
     }
 
     public int getHitpoints() {
@@ -43,25 +46,32 @@ public class Player {
     }
 
     public void playerMovement(float deltaTime) {
+        moving = false;
         if (Gdx.input.isKeyPressed(Input.Keys.A)) {
             rotation += 200 * deltaTime; // Rotate left
+            moving = true;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.D)) {
             rotation -= 200 * deltaTime; // Rotate right
+            moving = true;
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) {
+        if (Gdx.input.isKeyPressed(Input.Keys.W) && !stopMovement) {
             float radians = (float) Math.toRadians(rotation);
             float deltaX = (float) Math.cos(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
             float deltaY = (float) Math.sin(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
 
             rectangle.setPosition(rectangle.x + deltaX, rectangle.y + deltaY);
+            moving = true;
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) {
+        if (Gdx.input.isKeyPressed(Input.Keys.S) && !stopMovement) {
             float radians = (float) Math.toRadians(rotation);
             float deltaX = (float) Math.cos(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
             float deltaY = (float) Math.sin(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
 
             rectangle.setPosition(rectangle.x - deltaX, rectangle.y - deltaY);
+            moving = true;
         }
+
+        stopMovement = false;
     }
 }

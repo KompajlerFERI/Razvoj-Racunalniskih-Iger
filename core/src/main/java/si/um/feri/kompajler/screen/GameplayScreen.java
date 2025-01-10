@@ -18,6 +18,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import si.um.feri.kompajler.DigitalniDvojcek;
 import si.um.feri.kompajler.assets.AssetDescriptors;
 import si.um.feri.kompajler.config.GameConfig;
+import si.um.feri.kompajler.gameplay.MapBoundsHandler;
 import si.um.feri.kompajler.gameplay.Player;
 
 public class GameplayScreen implements Screen {
@@ -37,6 +38,9 @@ public class GameplayScreen implements Screen {
 
     private TextureAtlas gameplayAtlas;
     private Player player1;
+    private Player player2;
+
+    private MapBoundsHandler mapBoundsHandler;
 
     public GameplayScreen(DigitalniDvojcek game) {
         this.game = game;
@@ -52,6 +56,9 @@ public class GameplayScreen implements Screen {
         TiledMapTileLayer layer = (TiledMapTileLayer) tiledMap.getLayers().get("Background");
         float mapWidth = layer.getWidth() * layer.getTileWidth();
         float mapHeight = layer.getHeight() * layer.getTileHeight();
+
+        TiledMapTileLayer borders = (TiledMapTileLayer) tiledMap.getLayers().get("Borders");
+        mapBoundsHandler = new MapBoundsHandler(borders);
 
         gameplayViewport = new FitViewport(mapWidth, mapHeight);
         stage = new Stage(gameplayViewport, game.getBatch());
@@ -78,6 +85,9 @@ public class GameplayScreen implements Screen {
     public void render(float delta) {
         float deltaTime = Gdx.graphics.getDeltaTime();
         player1.playerMovement(deltaTime);
+
+        mapBoundsHandler.constrainPlayer(player1);
+
         ScreenUtils.clear(1f, 1f, 1f, 1f);
 
         gameplayCamera.update();
