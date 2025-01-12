@@ -2,7 +2,7 @@ package si.um.feri.kompajler.lwjgl3;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import si.um.feri.kompajler.DigitalniDvojcek;
+import main.java.si.um.feri.kompajler.DigitalniDvojcek;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {

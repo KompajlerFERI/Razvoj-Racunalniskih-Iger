@@ -1,4 +1,4 @@
-package si.um.feri.kompajler;
+package main.java.si.um.feri.kompajler;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Game;
@@ -11,7 +11,8 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 
-import si.um.feri.kompajler.screen.GameplayScreen;
+import main.java.si.um.feri.kompajler.screen.GameplayScreen;
+import main.java.si.um.feri.kompajler.screen.MapScreen;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class DigitalniDvojcek extends Game {
@@ -32,7 +33,7 @@ public class DigitalniDvojcek extends Game {
 
         assetManager.finishLoading();
 
-        setScreen(new GameplayScreen(this)); //to je temporary pol naj bo nastavleno na main screen al kaj pac bo
+        setScreen(new MapScreen(this)); //to je temporary pol naj bo nastavleno na main screen al kaj pac bo
     }
 
 //    @Override

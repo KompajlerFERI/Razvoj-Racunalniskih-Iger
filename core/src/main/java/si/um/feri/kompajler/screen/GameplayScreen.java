@@ -1,9 +1,10 @@
-package si.um.feri.kompajler.screen;
+package main.java.si.um.feri.kompajler.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -13,7 +14,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-import si.um.feri.kompajler.DigitalniDvojcek;
+import main.java.si.um.feri.kompajler.DigitalniDvojcek;
 import si.um.feri.kompajler.config.GameConfig;
 
 public class GameplayScreen implements Screen {
