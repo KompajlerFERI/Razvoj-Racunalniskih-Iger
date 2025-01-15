@@ -24,6 +24,8 @@ public class Player {
     public boolean stopMovement;
     private TextureAtlas atlas;
     private AssetManager assetManager;
+    private float initialX;
+    private float initialY;
 
     public Player(TextureAtlas atlas, AssetManager assetManager, int id) {
         this.assetManager = assetManager;
@@ -34,6 +36,8 @@ public class Player {
             this.tankTop = atlas.findRegion(RegionNames.TANK_TOP_GREEN);
             float width = tankBottom.getRegionWidth() * 1.2f;
             float height = tankBottom.getRegionHeight() * 1.2f;
+            this.initialX = 50;
+            this.initialY = 50;
             this.rectangle = new Rectangle(50, 50, width, height);
         }
         if (id == 1) {
@@ -41,6 +45,8 @@ public class Player {
             this.tankTop = atlas.findRegion(RegionNames.TANK_TOP_RED);
             float width = tankBottom.getRegionWidth() * 1.2f;
             float height = tankBottom.getRegionHeight() * 1.2f;
+            this.initialX = 1440;
+            this.initialY = 1430;
             this.rectangle = new Rectangle(1440, 1430, width, height);
         }
         this.rotation = 0;
@@ -69,6 +75,10 @@ public class Player {
     }
     public int getId() {
         return id;
+    }
+
+    public void resetPosition(int x, int y) {
+        this.rectangle.setPosition(x, y);
     }
 
     public void shoot() {
