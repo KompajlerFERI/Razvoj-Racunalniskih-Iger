@@ -131,10 +131,23 @@ public class MapRasterTiles {
             value++;
         }
 
+        File folder = new File("tiles");
+
+        // Check if the folder exists
+        if (!folder.exists()) {
+            if (folder.mkdir()) {
+                System.out.println("Folder 'tiles' created successfully.");
+            } else {
+                System.out.println("Failed to create the folder.");
+            }
+        } else {
+            System.out.println("Folder 'tiles' already exists.");
+        }
+
         for (int i = 0; i < size * size; i++) {
             int tileX = zoomXY.x + factorX[i];
             int tileY = zoomXY.y + factorY[i];
-            String fileName = "tiles/" + zoomXY.zoom + "_" + tileX + "_" + tileY + ".png";
+            String fileName = folder.getName() + "/" + zoomXY.zoom + "_" + tileX + "_" + tileY + ".png";
 
             File tileFile = new File(fileName);
 
