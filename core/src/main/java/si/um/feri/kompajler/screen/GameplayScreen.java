@@ -3,7 +3,10 @@ package si.um.feri.kompajler.screen;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -23,6 +26,7 @@ import si.um.feri.kompajler.gameplay.GameManager;
 import si.um.feri.kompajler.gameplay.MapBoundsHandlerBullet;
 import si.um.feri.kompajler.gameplay.MapBoundsHandlerPlayer;
 import si.um.feri.kompajler.gameplay.Player;
+import si.um.feri.kompajler.gameplay.PlayerScore;
 
 public class GameplayScreen implements Screen {
     private final DigitalniDvojcek game;
@@ -32,6 +36,8 @@ public class GameplayScreen implements Screen {
     private OrthographicCamera gameplayCamera;
     private OrthographicCamera hudCamera;
     private ShapeRenderer shapeRenderer;
+    private BitmapFont font;
+    private GlyphLayout layout;
 
     // Tiled map
     private TiledMap tiledMap;
@@ -76,7 +82,9 @@ public class GameplayScreen implements Screen {
         tiledMapRenderer.setView(gameplayCamera);
 
         shapeRenderer = new ShapeRenderer();
-
+        font = new BitmapFont();
+        font.getData().setScale(5); // Scale the font size by 10
+        layout = new GlyphLayout();
 
         assetManager.load(AssetDescriptors.GAMEPLAY_ATLAS);
         assetManager.load(AssetDescriptors.SHOOT_WAV);
@@ -89,13 +97,13 @@ public class GameplayScreen implements Screen {
         player2 = new Player(gameplayAtlas, assetManager, 1);
         GameManager.getInstance().players.add(player1);
         GameManager.getInstance().players.add(player2);
+
+        GameManager.getInstance().playerScores.add(new PlayerScore(0, 0), new PlayerScore(1, 0));
     }
 
     @Override
     public void render(float delta) {
         float deltaTime = Gdx.graphics.getDeltaTime();
-
-        //System.out.println(player1.getBounds());
 
         for (Player player : GameManager.getInstance().players) {
             player.playerMovement(deltaTime);
@@ -110,28 +118,38 @@ public class GameplayScreen implements Screen {
         tiledMapRenderer.setView(gameplayCamera);
         tiledMapRenderer.render();
 
-        // To je za gori nad mapo score
         shapeRenderer.setProjectionMatrix(gameplayCamera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(0, 0, 0, 1);
         shapeRenderer.rect(0, gameplayCamera.viewportHeight - 100, GameConfig.WIDTH * 4, 100);
         shapeRenderer.end();
 
-        // player
+        game.getBatch().setProjectionMatrix(gameplayCamera.combined);
+        game.getBatch().begin();
 
         for (Player player : GameManager.getInstance().players) {
-            game.getBatch().setProjectionMatrix(gameplayCamera.combined);
-            game.getBatch().begin();
             game.getBatch().draw(player.getTankBottom(), player.rectangle.x, player.rectangle.y, player.rectangle.width / 2, player.rectangle.height / 2, player.rectangle.width, player.rectangle.height, 1, 1, player.getRotation());
             game.getBatch().draw(player.getTankTop(), player.rectangle.x, player.rectangle.y, player.rectangle.width / 2, player.rectangle.height / 2, player.rectangle.width, player.rectangle.height, 1, 1, player.getRotation());
-            game.getBatch().end();
         }
 
-        game.getBatch().begin();
         for (Bullet bullet : GameManager.getInstance().getBullets()) {
             mapBoundsHandlerBullet.handleBulletCollision(bullet, deltaTime);
             game.getBatch().draw(bullet.getTextureRegion(), bullet.getBounds().x, bullet.getBounds().y, bullet.getBounds().width, bullet.getBounds().height);
         }
+
+        // Draw scores
+        for (PlayerScore playerScore : GameManager.getInstance().getPlayerScores()) {
+            if (playerScore.getPlayerId() == 0) {
+                layout.setText(font, "Green : " + playerScore.getScore());
+                font.setColor(Color.RED);
+                font.draw(game.getBatch(), layout, 10, gameplayCamera.viewportHeight - 10);
+            } else if (playerScore.getPlayerId() == 1) {
+                layout.setText(font, "Red: " + playerScore.getScore());
+                font.setColor(Color.GREEN);
+                font.draw(game.getBatch(), layout, gameplayCamera.viewportWidth - layout.width - 10, gameplayCamera.viewportHeight - 10);
+            }
+        }
+
         game.getBatch().end();
     }
 
@@ -161,5 +179,6 @@ public class GameplayScreen implements Screen {
     @Override
     public void dispose() {
         shapeRenderer.dispose();
+        font.dispose();
     }
 }
