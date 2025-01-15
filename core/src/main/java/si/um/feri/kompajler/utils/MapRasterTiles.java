@@ -1,11 +1,16 @@
 package main.java.si.um.feri.kompajler.utils;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -13,6 +18,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import org.json.JSONObject;
 import org.json.JSONArray;
+
+import javax.imageio.ImageIO;
 
 public class MapRasterTiles {
     //Mapbox
@@ -26,11 +33,40 @@ public class MapRasterTiles {
     //https://www.geoapify.com/get-started-with-maps-api
     static String mapServiceUrl = "https://maps.geoapify.com/v1/tile/";
     static String token = "?&apiKey=" + Keys.GEOAPIFY;
-    static String tilesetId = "klokantech-basic";
+    static String tilesetId = "osm-bright";
     static String format = "@2x.png";
 
     //@2x in format means it returns higher DPI version of the image and the image size is 512px (otherwise it is 256px)
     final static public int TILE_SIZE = 512;
+
+    public static void saveImageToFile(byte[] imageBytes, String filePath) throws IOException {
+        try (FileOutputStream out = new FileOutputStream(filePath)) {
+            out.write(imageBytes);
+            out.flush();
+        }
+    }
+
+    public static Texture getTextureFromImage(BufferedImage image) {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+            // Write the BufferedImage to a ByteArrayOutputStream as a PNG
+            ImageIO.write(image, "png", byteArrayOutputStream);
+            byte[] imageData = byteArrayOutputStream.toByteArray();
+            return getTexture(imageData);  // This is if and even getTexture(byte[]) exists
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Texture loadTileFromFile(String filePath) {
+        return new Texture(Gdx.files.internal(filePath));
+    }
+
+    private static Texture loadTextureFromFile(String filePath) {
+        // Implement this method to load a Texture from the file.
+        // Example placeholder code (adjust for your specific texture-loading library):
+        return new Texture(new FileHandle(filePath));
+    }
 
     /**
      * Get raster tile based on zoom and tile number.
@@ -96,8 +132,26 @@ public class MapRasterTiles {
         }
 
         for (int i = 0; i < size * size; i++) {
-            array[i] = getRasterTile(zoomXY.zoom, zoomXY.x + factorX[i], zoomXY.y + factorY[i]);
-            System.out.println(zoomXY.zoom + "/" + (zoomXY.x + factorX[i]) + "/" + (zoomXY.y + factorY[i]));
+            int tileX = zoomXY.x + factorX[i];
+            int tileY = zoomXY.y + factorY[i];
+            String fileName = "tiles/" + zoomXY.zoom + "_" + tileX + "_" + tileY + ".png";
+
+            File tileFile = new File(fileName);
+
+            if (!tileFile.exists()) {
+                System.out.println("Fetching tile from API: " + fileName);
+                ByteArrayOutputStream bis = fetchTile(new URL(mapServiceUrl + tilesetId + "/" + zoomXY.zoom + "/" +
+                    tileX + "/" + tileY + format + token));
+                saveImageToFile(bis.toByteArray(), fileName);
+            } else {
+                System.out.println("Tile already exists: " + fileName);
+            }
+
+            // Either it loads the saved or the existing file
+            Texture texture = loadTextureFromFile(fileName);
+            array[i] = texture;
+
+            System.out.println("Loaded tile: " + zoomXY.zoom + "/" + tileX + "/" + tileY);
         }
         return array;
     }

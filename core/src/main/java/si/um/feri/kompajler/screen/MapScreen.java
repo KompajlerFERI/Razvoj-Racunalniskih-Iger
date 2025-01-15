@@ -22,6 +22,8 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import main.java.si.um.feri.kompajler.DigitalniDvojcek;
 import main.java.si.um.feri.kompajler.utils.Constants;
@@ -34,6 +36,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+
 public class MapScreen implements Screen, GestureDetector.GestureListener {
     private final DigitalniDvojcek game;
     private ShapeRenderer shapeRenderer;
@@ -42,6 +49,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     private TiledMap tiledMap;
     private TiledMapRenderer tiledMapRenderer;
     private OrthographicCamera camera;
+    private Viewport viewport;
 
     private Texture[] mapTiles;
     private ZoomXY beginTile;   // top left tile
@@ -51,6 +59,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
     // test marker
     private final Geolocation MARKER_GEOLOCATION = new Geolocation(46.559070, 15.638100);
+    private final Geolocation MARKER_GEOLOCATION_2 = new Geolocation(46.562371757901566, 15.640497207641603);
 
     public MapScreen(DigitalniDvojcek game) {
         this.game = game;
@@ -61,6 +70,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         shapeRenderer = new ShapeRenderer();
 
         camera = new OrthographicCamera();
+        viewport = new FitViewport(800, 800, camera);
         camera.setToOrtho(false, Constants.MAP_WIDTH, Constants.MAP_HEIGHT);
         camera.position.set(Constants.MAP_WIDTH / 2f, Constants.MAP_HEIGHT / 2f, 0);
         camera.viewportWidth = Constants.MAP_WIDTH / 2f;
@@ -79,6 +89,9 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
+
 
         tiledMap = new TiledMap();
         MapLayers layers = tiledMap.getLayers();
@@ -109,14 +122,15 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         tiledMapRenderer.setView(camera);
         tiledMapRenderer.render();
 
-        drawMarkers();
+        Vector2 marker = MapRasterTiles.getPixelPosition(MARKER_GEOLOCATION.lat, MARKER_GEOLOCATION.lng, beginTile.x, beginTile.y);
+        Vector2 marker2 = MapRasterTiles.getPixelPosition(MARKER_GEOLOCATION_2.lat, MARKER_GEOLOCATION_2.lng, beginTile.x, beginTile.y);
+        drawMarkers(marker);
+        drawMarkers(marker2);
     }
 
     @Override
     public void resize(int width, int height) {
-        camera.viewportWidth = Constants.MAP_WIDTH / 2f;
-        camera.viewportHeight = Constants.MAP_HEIGHT / 2f;
-        camera.update();
+        viewport.update(width, height, true);
     }
 
     @Override
@@ -134,9 +148,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
     }
 
-    private void drawMarkers() {
-        Vector2 marker = MapRasterTiles.getPixelPosition(MARKER_GEOLOCATION.lat, MARKER_GEOLOCATION.lng, beginTile.x, beginTile.y);
-
+    private void drawMarkers(Vector2 marker) {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
@@ -221,7 +233,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             camera.translate(0, 3, 0);
         }
 
-        camera.zoom = MathUtils.clamp(camera.zoom, 0.5f, 2f);
+        camera.zoom = MathUtils.clamp(camera.zoom, 0.5f, 1.9f);
 
         float effectiveViewportWidth = camera.viewportWidth * camera.zoom;
         float effectiveViewportHeight = camera.viewportHeight * camera.zoom;
