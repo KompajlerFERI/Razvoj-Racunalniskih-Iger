@@ -79,12 +79,14 @@ public class GameplayScreen implements Screen {
 
 
         assetManager.load(AssetDescriptors.GAMEPLAY_ATLAS);
+        assetManager.load(AssetDescriptors.SHOOT_WAV);
+        assetManager.load(AssetDescriptors.EXPLOSION_WAV);
         assetManager.finishLoading();
 
         gameplayAtlas = assetManager.get(AssetDescriptors.GAMEPLAY_ATLAS);
 
-        player1 = new Player(gameplayAtlas, 0);
-        player2 = new Player(gameplayAtlas, 1);
+        player1 = new Player(gameplayAtlas, assetManager, 0);
+        player2 = new Player(gameplayAtlas, assetManager, 1);
         GameManager.getInstance().players.add(player1);
         GameManager.getInstance().players.add(player2);
     }
@@ -100,7 +102,7 @@ public class GameplayScreen implements Screen {
             mapBoundsHandlerPlayer.constrainPlayer(player);
         }
 
-        GameManager.getInstance().updateBullets(deltaTime);
+        GameManager.getInstance().updateBullets(deltaTime, assetManager);
 
         ScreenUtils.clear(1f, 1f, 1f, 1f);
 
@@ -142,6 +144,10 @@ public class GameplayScreen implements Screen {
 
     @Override
     public void pause() {
+    }
+
+    public AssetManager getAssetManager() {
+        return assetManager;
     }
 
     @Override

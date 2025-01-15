@@ -2,12 +2,14 @@ package si.um.feri.kompajler.gameplay;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 
 import org.w3c.dom.css.Rect;
 
+import si.um.feri.kompajler.assets.AssetDescriptors;
 import si.um.feri.kompajler.assets.RegionNames;
 import si.um.feri.kompajler.config.GameConfig;
 
@@ -21,8 +23,10 @@ public class Player {
     public boolean moving;
     public boolean stopMovement;
     private TextureAtlas atlas;
+    private AssetManager assetManager;
 
-    public Player(TextureAtlas atlas, int id) {
+    public Player(TextureAtlas atlas, AssetManager assetManager, int id) {
+        this.assetManager = assetManager;
         this.id = id;
         this.hitpoints = 100;
         if (id == 0) {
@@ -68,6 +72,7 @@ public class Player {
     }
 
     public void shoot() {
+        assetManager.get(AssetDescriptors.SHOOT_WAV).play(0.5f);
         // Bullet dimensions
         float bulletWidth = 10;
         float bulletHeight = 10;

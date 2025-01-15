@@ -1,6 +1,9 @@
 package si.um.feri.kompajler.gameplay;
 
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.utils.Array;
+
+import si.um.feri.kompajler.assets.AssetDescriptors;
 
 public class GameManager {
     private static GameManager instance;
@@ -26,7 +29,7 @@ public class GameManager {
         return players;
     }
 
-    public void updateBullets(float deltaTime) {
+    public void updateBullets(float deltaTime, AssetManager assetManager) {
         for (int i = bullets.size - 1; i >= 0; i--) {
             Bullet bullet = bullets.get(i);
             bullet.update(deltaTime);
@@ -35,6 +38,7 @@ public class GameManager {
             for (Player player : players) {
                 if (bullet.getBounds().overlaps(player.getBounds()) && bullet.playerId != player.getId()) {
                     player.damage();
+                    assetManager.get(AssetDescriptors.EXPLOSION_WAV).play(0.5f);
                     bullets.removeIndex(i);
                     System.out.println(player.getId() + "|" + player.getHitpoints());
                     break;
