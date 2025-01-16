@@ -42,9 +42,7 @@ public class MapBoundsHandlerBullet {
 
                 if (overlapX < overlapY) {
                     bullet.bounceX();
-                    // Adjust position to the previous position plus a small offset
                     bullet.setPosition(previousX, bulletBounds.y);
-                    // Adjust further if needed to ensure no overlap
                     if (bulletBounds.overlaps(wall)) {
                         if (bulletVelocity.x > 0) {
                             bullet.setPosition(wall.x - bulletBounds.width - 0.1f, bulletBounds.y);

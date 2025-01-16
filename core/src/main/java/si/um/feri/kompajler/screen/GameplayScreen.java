@@ -105,6 +105,15 @@ public class GameplayScreen implements Screen {
     public void render(float delta) {
         float deltaTime = Gdx.graphics.getDeltaTime();
 
+        if (GameManager.getInstance().getHighestPlayerScore() == 7) {
+            GameManager.getInstance().resetPlayerScores();
+            int id = GameManager.getInstance().getWinningPlayer();
+            String winner = "";
+            if (id == 0) winner = "RED";
+            else winner = "GREEN";
+            System.out.println("GAME OVER, " + winner + " WINS");
+        }
+
         for (Player player : GameManager.getInstance().players) {
             player.playerMovement(deltaTime);
             mapBoundsHandlerPlayer.constrainPlayer(player);

@@ -50,6 +50,33 @@ public class GameManager {
         return playerScores;
     }
 
+    public int getHighestPlayerScore() {
+        int highestScore = 0;
+        for (PlayerScore playerScore : playerScores) {
+            if (playerScore.getScore() > highestScore) {
+                highestScore = playerScore.getScore();
+            }
+        }
+        return highestScore;
+    }
+
+    public int getWinningPlayer() {
+        PlayerScore winningScore = null;
+        for (PlayerScore playerScore : playerScores) {
+            if (winningScore == null || playerScore.getScore() > winningScore.getScore()) {
+                winningScore = playerScore;
+            }
+        }
+        if (winningScore != null) {
+            for (Player player : players) {
+                if (player.getId() == winningScore.getPlayerId()) {
+                    return player.getId();
+                }
+            }
+        }
+        return -1;
+    }
+
     private void updatePlayerScore(int id) {
         int increaseScorePlayerId = -1;
         if (id == 0) increaseScorePlayerId = 1;
@@ -60,6 +87,12 @@ public class GameManager {
                 playerScore.increaseScore();
             }
             System.out.println("Player: " + playerScore.getPlayerId() + "|Score = " + playerScore.getScore());
+        }
+    }
+
+    public void resetPlayerScores() {
+        for (PlayerScore playerScore : playerScores) {
+            playerScore.reset();
         }
     }
 

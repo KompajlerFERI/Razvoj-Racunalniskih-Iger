@@ -12,7 +12,6 @@ public class MapBoundsHandlerPlayer {
     }
 
     public void constrainPlayer(Player player) {
-        // Check each corner and side of the player's rectangle
         if (isTileBlocked(player.rectangle.x, player.rectangle.y) ||
             isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y) ||
             isTileBlocked(player.rectangle.x, player.rectangle.y + player.rectangle.height) ||
@@ -22,25 +21,25 @@ public class MapBoundsHandlerPlayer {
             isTileBlocked(player.rectangle.x, player.rectangle.y + player.rectangle.height / 2) ||
             isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y + player.rectangle.height / 2)) {
 
-            // Adjust player's position based on the direction of movement
+            // adjust pozicija glede na to v kero smer se premika
             if (isTileBlocked(player.rectangle.x, player.rectangle.y) ||
                 isTileBlocked(player.rectangle.x, player.rectangle.y + player.rectangle.height) ||
                 isTileBlocked(player.rectangle.x, player.rectangle.y + player.rectangle.height / 2)) {
-                player.rectangle.x += Math.signum(GameConfig.PLAYER_SPEED) * 1; // Adjust by 1 pixel
+                player.rectangle.x += Math.signum(GameConfig.PLAYER_SPEED) * 1; // ce se overlapa premakni vun
             } else if (isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y) ||
                 isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y + player.rectangle.height) ||
                 isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y + player.rectangle.height / 2)) {
-                player.rectangle.x -= Math.signum(GameConfig.PLAYER_SPEED) * 1; // Adjust by 1 pixel
+                player.rectangle.x -= Math.signum(GameConfig.PLAYER_SPEED) * 1; // ce se overlapa premakni vun
             }
 
             if (isTileBlocked(player.rectangle.x, player.rectangle.y) ||
                 isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y) ||
                 isTileBlocked(player.rectangle.x + player.rectangle.width / 2, player.rectangle.y)) {
-                player.rectangle.y += Math.signum(GameConfig.PLAYER_SPEED) * 1; // Adjust by 1 pixel
+                player.rectangle.y += Math.signum(GameConfig.PLAYER_SPEED) * 1; // ce se overlapa premakni vun
             } else if (isTileBlocked(player.rectangle.x, player.rectangle.y + player.rectangle.height) ||
                 isTileBlocked(player.rectangle.x + player.rectangle.width, player.rectangle.y + player.rectangle.height) ||
                 isTileBlocked(player.rectangle.x + player.rectangle.width / 2, player.rectangle.y + player.rectangle.height)) {
-                player.rectangle.y -= Math.signum(GameConfig.PLAYER_SPEED) * 1; // Adjust by 1 pixel
+                player.rectangle.y -= Math.signum(GameConfig.PLAYER_SPEED) * 1; // ce se overlapa premakni vun
             }
 
             player.stopMovement = true;

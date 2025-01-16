@@ -20,4 +20,8 @@ public class PlayerScore {
     public void increaseScore() {
         ++this.score;
     }
+
+    public void reset() {
+        this.score = 0;
+    }
 }
