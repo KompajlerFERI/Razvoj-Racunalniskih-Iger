@@ -2,8 +2,10 @@ package main.java.si.um.feri.kompajler.utils;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
 import java.awt.image.BufferedImage;
@@ -167,6 +169,27 @@ public class MapRasterTiles {
             System.out.println("Loaded tile: " + zoomXY.zoom + "/" + tileX + "/" + tileY);
         }
         return array;
+    }
+
+    public static void drawMarkers(Camera camera, SpriteBatch spriteBatch, Vector2 marker, boolean isVegan, boolean isPizza) {
+        // Use a SpriteBatch for drawing images
+        spriteBatch.setProjectionMatrix(camera.combined);
+        spriteBatch.begin();
+
+        // Choose the appropriate texture based on tags
+        Texture texture;
+         if (isPizza) {
+            texture = new Texture("map_screen/pin_pizza_low_rez.png");
+        } else if (isVegan) {
+            texture = new Texture("map_screen/pin_vegan_low_rez.png");
+        } else {
+            texture = new Texture("map_screen/pin_normal_low_rez.png");
+        }
+
+        // Draw the texture at the marker position
+        spriteBatch.draw(texture, marker.x - texture.getWidth() / 2, marker.y - texture.getHeight() / 2);
+
+        spriteBatch.end();
     }
 
     /**

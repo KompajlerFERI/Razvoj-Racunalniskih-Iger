@@ -1,9 +1,7 @@
 package main.java.si.um.feri.kompajler.screen;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -25,21 +23,18 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import main.java.si.um.feri.kompajler.DigitalniDvojcek;
+import main.java.si.um.feri.kompajler.utils.ApiHelper;
 import main.java.si.um.feri.kompajler.utils.Constants;
 import main.java.si.um.feri.kompajler.utils.Geolocation;
 import main.java.si.um.feri.kompajler.utils.MapRasterTiles;
 import main.java.si.um.feri.kompajler.utils.ZoomXY;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 
 public class MapScreen implements Screen, GestureDetector.GestureListener {
     private final DigitalniDvojcek game;
@@ -49,17 +44,25 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     private TiledMap tiledMap;
     private TiledMapRenderer tiledMapRenderer;
     private OrthographicCamera camera;
+    private SpriteBatch batch;
     private Viewport viewport;
 
     private Texture[] mapTiles;
     private ZoomXY beginTile;   // top left tile
+    private int currentZoom = Constants.ZOOM;
 
     // center geolocation
-    private final Geolocation CENTER_GEOLOCATION = new Geolocation(46.557314, 15.637771);
+    private final Geolocation CENTER_GEOLOCATION = new Geolocation(46.545195, 15.644645);
 
-    // test marker
-    private final Geolocation MARKER_GEOLOCATION = new Geolocation(46.559070, 15.638100);
-    private final Geolocation MARKER_GEOLOCATION_2 = new Geolocation(46.562371757901566, 15.640497207641603);
+    // test markers
+    //private final Geolocation MARKER_GEOLOCATION_MCDONALDS = new Geolocation(46.53333641365784, 15.699360966682436);
+    //private final Geolocation MARKER_GEOLOCATION_KITAJSKA = new Geolocation(46.53946206085161, 15.604963302612306);
+    //private final Geolocation MARKER_GEOLOCATION_NAJBOLJ_SPODNJA = new Geolocation(46.51528756947956, 15.653715133666994);
+    //private final Geolocation MARKER_GEOLOCATION_NAJBOLJ_ZGORNJA = new Geolocation(46.56755000128473, 15.64431667327881);
+
+    String jsonResponse = null;
+    JSONArray restaurants = null;
+    Vector2 locationPlaceholder = null;
 
     public MapScreen(DigitalniDvojcek game) {
         this.game = game;
@@ -68,6 +71,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     @Override
     public void show() {
         shapeRenderer = new ShapeRenderer();
+        batch = new SpriteBatch();
 
         camera = new OrthographicCamera();
         viewport = new FitViewport(800, 800, camera);
@@ -80,35 +84,47 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
         touchPosition = new Vector3();
 
+        loadTilesAtZoomLevel(Constants.ZOOM);
+    }
+
+    private void loadTilesAtZoomLevel(int zoomLevel) {
         try {
-            //in most cases, geolocation won't be in the center of the tile because tile borders are predetermined (geolocation can be at the corner of a tile)
-            ZoomXY centerTile = MapRasterTiles.getTileNumber(CENTER_GEOLOCATION.lat, CENTER_GEOLOCATION.lng, Constants.ZOOM);
+            ZoomXY centerTile = MapRasterTiles.getTileNumber(CENTER_GEOLOCATION.lat, CENTER_GEOLOCATION.lng, zoomLevel);
             mapTiles = MapRasterTiles.getRasterTileZone(centerTile, Constants.NUM_TILES);
-            //you need the beginning tile (tile on the top left corner) to convert geolocation to a location in pixels.
-            beginTile = new ZoomXY(Constants.ZOOM, centerTile.x - ((Constants.NUM_TILES - 1) / 2), centerTile.y - ((Constants.NUM_TILES - 1) / 2));
+            beginTile = new ZoomXY(zoomLevel, centerTile.x - ((Constants.NUM_TILES - 1) / 2), centerTile.y - ((Constants.NUM_TILES - 1) / 2));
+
+            tiledMap = new TiledMap();
+            MapLayers layers = tiledMap.getLayers();
+            while (layers.size() > 0) {
+                layers.remove(0);
+            }
+
+            TiledMapTileLayer layer = new TiledMapTileLayer(Constants.NUM_TILES, Constants.NUM_TILES, MapRasterTiles.TILE_SIZE, MapRasterTiles.TILE_SIZE);
+            int index = 0;
+            for (int j = Constants.NUM_TILES - 1; j >= 0; j--) {
+                for (int i = 0; i < Constants.NUM_TILES; i++) {
+                    TiledMapTileLayer.Cell cell = new TiledMapTileLayer.Cell();
+                    cell.setTile(new StaticTiledMapTile(new TextureRegion(mapTiles[index], MapRasterTiles.TILE_SIZE, MapRasterTiles.TILE_SIZE)));
+                    layer.setCell(i, j, cell);
+                    index++;
+                }
+            }
+            layers.add(layer);
+
+            tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
+            try {
+                jsonResponse = ApiHelper.makeGetRequest(ApiHelper.url + "restaurants");
+                if (jsonResponse != null) {
+                    restaurants = new JSONArray(jsonResponse);
+                } else {
+                    System.out.println("Failed to fetch data from the API.");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
-
-
-        tiledMap = new TiledMap();
-        MapLayers layers = tiledMap.getLayers();
-
-        TiledMapTileLayer layer = new TiledMapTileLayer(Constants.NUM_TILES, Constants.NUM_TILES, MapRasterTiles.TILE_SIZE, MapRasterTiles.TILE_SIZE);
-        int index = 0;
-        for (int j = Constants.NUM_TILES - 1; j >= 0; j--) {
-            for (int i = 0; i < Constants.NUM_TILES; i++) {
-                TiledMapTileLayer.Cell cell = new TiledMapTileLayer.Cell();
-                cell.setTile(new StaticTiledMapTile(new TextureRegion(mapTiles[index], MapRasterTiles.TILE_SIZE, MapRasterTiles.TILE_SIZE)));
-                layer.setCell(i, j, cell);
-                index++;
-            }
-        }
-        layers.add(layer);
-
-        tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
     }
 
     @Override
@@ -116,16 +132,47 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         ScreenUtils.clear(0, 0, 0, 1);
 
         handleInput();
+        checkZoomLevelAndUpdateTiles();
 
         camera.update();
 
         tiledMapRenderer.setView(camera);
         tiledMapRenderer.render();
 
-        Vector2 marker = MapRasterTiles.getPixelPosition(MARKER_GEOLOCATION.lat, MARKER_GEOLOCATION.lng, beginTile.x, beginTile.y);
-        Vector2 marker2 = MapRasterTiles.getPixelPosition(MARKER_GEOLOCATION_2.lat, MARKER_GEOLOCATION_2.lng, beginTile.x, beginTile.y);
-        drawMarkers(marker);
-        drawMarkers(marker2);
+        for (int i = 0; i < restaurants.length(); i++) {
+            JSONObject restaurant = restaurants.getJSONObject(i);
+            String name = restaurant.getString("name");
+            JSONObject location = restaurant.getJSONObject("location");
+            JSONArray coordinates = location.getJSONArray("coordinates");
+            double latitude = coordinates.getDouble(1);
+            double longitude = coordinates.getDouble(0);
+
+            boolean hasVeganTag = false;
+            boolean hasPizzaTag = false;
+            JSONArray tags = restaurant.getJSONArray("tags");
+            for (int j = 0; j < tags.length(); j++) {
+                String tagName = tags.getJSONObject(j).getString("name");
+                if (tagName.equalsIgnoreCase("vegetarijansko")) {
+                    hasVeganTag = true;
+                }
+                if (tagName.equalsIgnoreCase("pizza")) {
+                    hasPizzaTag = true;
+                }
+            }
+
+            locationPlaceholder = MapRasterTiles.getPixelPosition(latitude, longitude, beginTile.x, beginTile.y);
+            MapRasterTiles.drawMarkers(camera, batch, locationPlaceholder, hasVeganTag, hasPizzaTag);
+        }
+    }
+
+    private void checkZoomLevelAndUpdateTiles() {
+        int zoomLevel = (int) Math.ceil(camera.zoom * Constants.ZOOM);
+        zoomLevel = MathUtils.clamp(zoomLevel, 1, 19); // Typical tile services use zoom levels from 1 to 19
+
+        if (zoomLevel != currentZoom) {
+            currentZoom = zoomLevel;
+            loadTilesAtZoomLevel(currentZoom);
+        }
     }
 
     @Override
@@ -221,16 +268,16 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             camera.zoom -= 0.02;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            camera.translate(-3, 0, 0);
+            camera.translate(-9, 0, 0);
         }
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            camera.translate(3, 0, 0);
+            camera.translate(9, 0, 0);
         }
         if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-            camera.translate(0, -3, 0);
+            camera.translate(0, -9, 0);
         }
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-            camera.translate(0, 3, 0);
+            camera.translate(0, 9, 0);
         }
 
         camera.zoom = MathUtils.clamp(camera.zoom, 0.5f, 1.9f);
