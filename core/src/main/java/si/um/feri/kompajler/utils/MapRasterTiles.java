@@ -171,27 +171,6 @@ public class MapRasterTiles {
         return array;
     }
 
-    public static void drawMarkers(Camera camera, SpriteBatch spriteBatch, Vector2 marker, boolean isVegan, boolean isPizza) {
-        // Use a SpriteBatch for drawing images
-        spriteBatch.setProjectionMatrix(camera.combined);
-        spriteBatch.begin();
-
-        // Choose the appropriate texture based on tags
-        Texture texture;
-         if (isPizza) {
-            texture = new Texture("map_screen/pin_pizza_low_rez.png");
-        } else if (isVegan) {
-            texture = new Texture("map_screen/pin_vegan_low_rez.png");
-        } else {
-            texture = new Texture("map_screen/pin_normal_low_rez.png");
-        }
-
-        // Draw the texture at the marker position
-        spriteBatch.draw(texture, marker.x - texture.getWidth() / 2, marker.y - texture.getHeight() / 2);
-
-        spriteBatch.end();
-    }
-
     /**
      * Gets tile from provided URL and returns it as ByteArrayOutputStream.
      *

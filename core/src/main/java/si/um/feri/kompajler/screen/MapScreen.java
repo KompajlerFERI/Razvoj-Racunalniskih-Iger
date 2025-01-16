@@ -3,6 +3,7 @@ package main.java.si.um.feri.kompajler.screen;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -49,20 +50,16 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
     private Texture[] mapTiles;
     private ZoomXY beginTile;   // top left tile
-    private int currentZoom = Constants.ZOOM;
 
     // center geolocation
     private final Geolocation CENTER_GEOLOCATION = new Geolocation(46.545195, 15.644645);
 
-    // test markers
-    //private final Geolocation MARKER_GEOLOCATION_MCDONALDS = new Geolocation(46.53333641365784, 15.699360966682436);
-    //private final Geolocation MARKER_GEOLOCATION_KITAJSKA = new Geolocation(46.53946206085161, 15.604963302612306);
-    //private final Geolocation MARKER_GEOLOCATION_NAJBOLJ_SPODNJA = new Geolocation(46.51528756947956, 15.653715133666994);
-    //private final Geolocation MARKER_GEOLOCATION_NAJBOLJ_ZGORNJA = new Geolocation(46.56755000128473, 15.64431667327881);
 
     String jsonResponse = null;
     JSONArray restaurants = null;
     Vector2 locationPlaceholder = null;
+
+    Texture texture_normal, texture_vegan, texture_pizza;
 
     public MapScreen(DigitalniDvojcek game) {
         this.game = game;
@@ -83,46 +80,44 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         camera.update();
 
         touchPosition = new Vector3();
+        texture_normal = new Texture("map_screen/pin_normal_low_rez.png");
+        texture_vegan = new Texture("map_screen/pin_vegan_low_rez.png");
+        texture_pizza = new Texture("map_screen/pin_pizza_low_rez.png");
 
-        loadTilesAtZoomLevel(Constants.ZOOM);
-    }
-
-    private void loadTilesAtZoomLevel(int zoomLevel) {
         try {
-            ZoomXY centerTile = MapRasterTiles.getTileNumber(CENTER_GEOLOCATION.lat, CENTER_GEOLOCATION.lng, zoomLevel);
+            //in most cases, geolocation won't be in the center of the tile because tile borders are predetermined (geolocation can be at the corner of a tile)
+            ZoomXY centerTile = MapRasterTiles.getTileNumber(CENTER_GEOLOCATION.lat, CENTER_GEOLOCATION.lng, Constants.ZOOM);
             mapTiles = MapRasterTiles.getRasterTileZone(centerTile, Constants.NUM_TILES);
-            beginTile = new ZoomXY(zoomLevel, centerTile.x - ((Constants.NUM_TILES - 1) / 2), centerTile.y - ((Constants.NUM_TILES - 1) / 2));
-
-            tiledMap = new TiledMap();
-            MapLayers layers = tiledMap.getLayers();
-            while (layers.size() > 0) {
-                layers.remove(0);
-            }
-
-            TiledMapTileLayer layer = new TiledMapTileLayer(Constants.NUM_TILES, Constants.NUM_TILES, MapRasterTiles.TILE_SIZE, MapRasterTiles.TILE_SIZE);
-            int index = 0;
-            for (int j = Constants.NUM_TILES - 1; j >= 0; j--) {
-                for (int i = 0; i < Constants.NUM_TILES; i++) {
-                    TiledMapTileLayer.Cell cell = new TiledMapTileLayer.Cell();
-                    cell.setTile(new StaticTiledMapTile(new TextureRegion(mapTiles[index], MapRasterTiles.TILE_SIZE, MapRasterTiles.TILE_SIZE)));
-                    layer.setCell(i, j, cell);
-                    index++;
-                }
-            }
-            layers.add(layer);
-
-            tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
-            try {
-                jsonResponse = ApiHelper.makeGetRequest(ApiHelper.url + "restaurants");
-                if (jsonResponse != null) {
-                    restaurants = new JSONArray(jsonResponse);
-                } else {
-                    System.out.println("Failed to fetch data from the API.");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            //you need the beginning tile (tile on the top left corner) to convert geolocation to a location in pixels.
+            beginTile = new ZoomXY(Constants.ZOOM, centerTile.x - ((Constants.NUM_TILES - 1) / 2), centerTile.y - ((Constants.NUM_TILES - 1) / 2));
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        tiledMap = new TiledMap();
+        MapLayers layers = tiledMap.getLayers();
+
+        TiledMapTileLayer layer = new TiledMapTileLayer(Constants.NUM_TILES, Constants.NUM_TILES, MapRasterTiles.TILE_SIZE, MapRasterTiles.TILE_SIZE);
+        int index = 0;
+        for (int j = Constants.NUM_TILES - 1; j >= 0; j--) {
+            for (int i = 0; i < Constants.NUM_TILES; i++) {
+                TiledMapTileLayer.Cell cell = new TiledMapTileLayer.Cell();
+                cell.setTile(new StaticTiledMapTile(new TextureRegion(mapTiles[index], MapRasterTiles.TILE_SIZE, MapRasterTiles.TILE_SIZE)));
+                layer.setCell(i, j, cell);
+                index++;
+            }
+        }
+        layers.add(layer);
+
+        tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
+        try {
+            jsonResponse = ApiHelper.makeGetRequest(ApiHelper.url + "restaurants");
+            if (jsonResponse != null) {
+                restaurants = new JSONArray(jsonResponse);
+            } else {
+                System.out.println("Failed to fetch data from the API.");
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -132,7 +127,6 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         ScreenUtils.clear(0, 0, 0, 1);
 
         handleInput();
-        checkZoomLevelAndUpdateTiles();
 
         camera.update();
 
@@ -144,8 +138,8 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             String name = restaurant.getString("name");
             JSONObject location = restaurant.getJSONObject("location");
             JSONArray coordinates = location.getJSONArray("coordinates");
-            double latitude = coordinates.getDouble(1);
-            double longitude = coordinates.getDouble(0);
+            double latitude = coordinates.getDouble(1);  // Index 1 for latitude
+            double longitude = coordinates.getDouble(0); // Index 0 for longitude
 
             boolean hasVeganTag = false;
             boolean hasPizzaTag = false;
@@ -161,17 +155,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             }
 
             locationPlaceholder = MapRasterTiles.getPixelPosition(latitude, longitude, beginTile.x, beginTile.y);
-            MapRasterTiles.drawMarkers(camera, batch, locationPlaceholder, hasVeganTag, hasPizzaTag);
-        }
-    }
-
-    private void checkZoomLevelAndUpdateTiles() {
-        int zoomLevel = (int) Math.ceil(camera.zoom * Constants.ZOOM);
-        zoomLevel = MathUtils.clamp(zoomLevel, 1, 19); // Typical tile services use zoom levels from 1 to 19
-
-        if (zoomLevel != currentZoom) {
-            currentZoom = zoomLevel;
-            loadTilesAtZoomLevel(currentZoom);
+            drawMarkers(camera, batch, locationPlaceholder, hasVeganTag, hasPizzaTag);
         }
     }
 
@@ -193,6 +177,29 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     @Override
     public void hide() {
 
+    }
+
+    private void drawMarkers(OrthographicCamera camera, SpriteBatch spriteBatch, Vector2 marker, boolean isVegan, boolean isPizza) {
+        // Use a SpriteBatch for drawing images
+        spriteBatch.setProjectionMatrix(camera.combined);
+        spriteBatch.begin();
+
+        // Choose the appropriate texture based on tags
+        Texture texture;
+        if (isPizza) {
+            texture = texture_normal;
+        } else if (isVegan) {
+            texture = texture_vegan;
+        } else {
+            texture = texture_pizza;
+        }
+
+        // Draw the texture at the marker position
+        float camZoom = camera.zoom; // Set a fixed size for the pin
+        float pinWidth = camZoom * texture.getWidth() / 2;
+        float pinHeight = camZoom * texture.getHeight() / 2;
+        spriteBatch.draw(texture, marker.x - pinWidth / 2, marker.y, pinWidth, pinHeight);
+        spriteBatch.end();
     }
 
     private void drawMarkers(Vector2 marker) {
