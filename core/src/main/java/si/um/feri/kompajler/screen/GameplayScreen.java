@@ -138,7 +138,7 @@ public class GameplayScreen implements Screen {
 
         for (Player player : GameManager.getInstance().players) {
             game.getBatch().draw(player.getTankBottom(), player.rectangle.x, player.rectangle.y, player.rectangle.width / 2, player.rectangle.height / 2, player.rectangle.width, player.rectangle.height, 1, 1, player.getRotation());
-            game.getBatch().draw(player.getTankTop(), player.rectangle.x, player.rectangle.y, player.rectangle.width / 2, player.rectangle.height / 2, player.rectangle.width, player.rectangle.height, 1, 1, player.getRotation());
+            //game.getBatch().draw(player.getTankTop(), player.rectangle.x, player.rectangle.y, player.rectangle.width / 2, player.rectangle.height / 2, player.rectangle.width, player.rectangle.height, 1, 1, player.getRotation());
         }
 
         for (Bullet bullet : GameManager.getInstance().getBullets()) {

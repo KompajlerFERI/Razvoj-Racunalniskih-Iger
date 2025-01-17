@@ -16,9 +16,10 @@ import si.um.feri.kompajler.config.GameConfig;
 public class Player {
     private int hitpoints;
     private TextureRegion tankBottom;
-    private TextureRegion tankTop;
+    //private TextureRegion tankTop;
     private int id;
     public Rectangle rectangle;
+    private Rectangle hitbox;
     private float rotation;
     public boolean moving;
     public boolean stopMovement;
@@ -33,18 +34,18 @@ public class Player {
         this.hitpoints = 100;
         if (id == 0) {
             this.tankBottom = atlas.findRegion(RegionNames.TANK_BOTTOM_GREEN);
-            this.tankTop = atlas.findRegion(RegionNames.TANK_TOP_GREEN);
-            float width = tankBottom.getRegionWidth() * 1.2f;
-            float height = tankBottom.getRegionHeight() * 1.2f;
+            //this.tankTop = atlas.findRegion(RegionNames.TANK_TOP_GREEN);
+            float width = tankBottom.getRegionWidth() * 3.2f;
+            float height = tankBottom.getRegionHeight() * 3.2f;
             this.initialX = 50;
             this.initialY = 50;
             this.rectangle = new Rectangle(50, 50, width, height);
         }
         if (id == 1) {
             this.tankBottom = atlas.findRegion(RegionNames.TANK_BOTTOM_RED);
-            this.tankTop = atlas.findRegion(RegionNames.TANK_TOP_RED);
-            float width = tankBottom.getRegionWidth() * 1.2f;
-            float height = tankBottom.getRegionHeight() * 1.2f;
+            //this.tankTop = atlas.findRegion(RegionNames.TANK_TOP_RED);
+            float width = tankBottom.getRegionWidth() * 3.2f;
+            float height = tankBottom.getRegionHeight() * 3.2f;
             this.initialX = 1440;
             this.initialY = 1430;
             this.rectangle = new Rectangle(1440, 1430, width, height);
@@ -61,9 +62,9 @@ public class Player {
     public TextureRegion getTankBottom() {
         return tankBottom;
     }
-    public TextureRegion getTankTop() {
-        return tankTop;
-    }
+//    public TextureRegion getTankTop() {
+//        return tankTop;
+//    }
     public float getRotation() {
         return rotation;
     }
