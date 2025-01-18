@@ -4,16 +4,51 @@ size: 256, 128
 format: RGBA8888
 filter: Nearest, Nearest
 repeat: none
-blank-tank-bottom-green
+bullet
   rotate: false
-  xy: 94, 27
-  size: 46, 65
-  orig: 46, 65
+  xy: 60, 17
+  size: 10, 10
+  orig: 10, 10
   offset: 0, 0
   index: -1
-blank-tank-top-green
+img3
   rotate: false
   xy: 2, 2
+  size: 27, 25
+  orig: 27, 25
+  offset: 0, 0
+  index: -1
+img4
+  rotate: false
+  xy: 31, 2
+  size: 27, 25
+  orig: 27, 25
+  offset: 0, 0
+  index: -1
+tank-bottom-green
+  rotate: false
+  xy: 186, 73
+  size: 65, 46
+  orig: 65, 46
+  offset: 0, 0
+  index: -1
+tank-bottom-red
+  rotate: false
+  xy: 186, 25
+  size: 65, 46
+  orig: 65, 46
+  offset: 0, 0
+  index: -1
+tank-top-green
+  rotate: false
+  xy: 2, 29
+  size: 90, 90
+  orig: 90, 90
+  offset: 0, 0
+  index: -1
+tank-top-red
+  rotate: false
+  xy: 94, 29
   size: 90, 90
   orig: 90, 90
   offset: 0, 0
