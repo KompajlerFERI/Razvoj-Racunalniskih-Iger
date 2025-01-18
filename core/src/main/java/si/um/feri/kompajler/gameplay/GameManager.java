@@ -17,6 +17,7 @@ public class GameManager {
     public Array<PlayerScore> playerScores;
     private static final List<int[]> validPositions = new ArrayList<>();
     private static final Random random = new Random();
+    public static int winner;
 
     static {
         validPositions.add(new int[]{50, 50});
@@ -103,11 +104,15 @@ public class GameManager {
             bullet.update(deltaTime);
 
             for (Player player : players) {
+                if (player == null) continue;
+
                 if (bullet.getBounds().overlaps(player.getBounds()) && bullet.playerId != player.getId()) {
                     player.damage();
                     System.out.println("Player damaged: " + player.getId());
                     updatePlayerScore(player.getId());
-                    assetManager.get(AssetDescriptors.EXPLOSION_WAV).play(0.5f);
+                    if (assetManager.isLoaded(AssetDescriptors.EXPLOSION_WAV)) {
+                        assetManager.get(AssetDescriptors.EXPLOSION_WAV).play(0.5f);
+                    }
                     bullets.removeIndex(i);
                     reset = true;
                     break;
@@ -117,7 +122,9 @@ public class GameManager {
                     bullets.removeIndex(i);
                     System.out.println("Player damaged: " + player.getId());
                     updatePlayerScore(player.getId());
-                    assetManager.get(AssetDescriptors.EXPLOSION_WAV).play(0.5f);
+                    if (assetManager.isLoaded(AssetDescriptors.EXPLOSION_WAV)) {
+                        assetManager.get(AssetDescriptors.EXPLOSION_WAV).play(0.5f);
+                    }
                     reset = true;
                     break;
                 }

@@ -1,5 +1,6 @@
 package si.um.feri.kompajler.gameplay;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
@@ -14,6 +15,7 @@ public class Bullet {
     private Vector2 velocity;
     private float speed;
     private TextureRegion textureRegion;
+    private Color color;
     public int count;
     public int playerId;
     public boolean damageFriendly;
@@ -28,6 +30,23 @@ public class Bullet {
         this.count = MathUtils.random(3, 7);
         this.damageFriendly = false;
         this.playerId = playerId;
+
+        // Set color to either green, orange, or red
+        int colorChoice = MathUtils.random(3);
+        switch (colorChoice) {
+            case 0:
+                this.color = Color.GREEN;
+                break;
+            case 1:
+                this.color = Color.ORANGE;
+                break;
+            case 2:
+                this.color = Color.RED;
+                break;
+            case 3:
+                this.color = Color.YELLOW;
+                break;
+        }
     }
 
     public Rectangle getBounds() {
@@ -40,6 +59,10 @@ public class Bullet {
 
     public TextureRegion getTextureRegion() {
         return textureRegion;
+    }
+
+    public Color getColor() {
+        return color;
     }
 
     public void update(float deltaTime) {

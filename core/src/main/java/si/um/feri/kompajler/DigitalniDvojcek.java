@@ -11,7 +11,9 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+import si.um.feri.kompajler.assets.AssetDescriptors;
 import si.um.feri.kompajler.screen.GameplayScreen;
+import si.um.feri.kompajler.screen.PreGameplayScreen;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class DigitalniDvojcek extends Game {
@@ -29,11 +31,12 @@ public class DigitalniDvojcek extends Game {
         image = new Texture("libgdx.png");
 
         assetManager = new AssetManager();
+        assetManager.load(AssetDescriptors.UI_SKIN);
         // tu laodaj ce mas kake assete za loadat
 
         assetManager.finishLoading();
 
-        setScreen(new GameplayScreen(this)); //to je temporary pol naj bo nastavleno na main screen al kaj pac bo
+        setScreen(new PreGameplayScreen(this)); //to je temporary pol naj bo nastavleno na main screen al kaj pac bo
 
 
         // GAME INFO

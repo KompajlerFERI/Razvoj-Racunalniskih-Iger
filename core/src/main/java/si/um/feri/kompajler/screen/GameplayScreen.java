@@ -108,10 +108,15 @@ public class GameplayScreen implements Screen {
         if (GameManager.getInstance().getHighestPlayerScore() == 7) {
             GameManager.getInstance().resetPlayerScores();
             int id = GameManager.getInstance().getWinningPlayer();
-            String winner = "";
-            if (id == 0) winner = "RED";
-            else winner = "GREEN";
-            System.out.println("GAME OVER, " + winner + " WINS");
+            GameManager.getInstance().winner = (id == 0) ? 1 : 0;
+
+            // Clear bullets and players
+            GameManager.getInstance().bullets.clear();
+            GameManager.getInstance().players.clear();
+
+            // Set screen to VictoryScreen
+            game.setScreen(new VictoryScreen(game, GameManager.getInstance().winner));
+            return;
         }
 
         for (Player player : GameManager.getInstance().players) {
@@ -138,12 +143,13 @@ public class GameplayScreen implements Screen {
 
         for (Player player : GameManager.getInstance().players) {
             game.getBatch().draw(player.getTankBottom(), player.rectangle.x, player.rectangle.y, player.rectangle.width / 2, player.rectangle.height / 2, player.rectangle.width, player.rectangle.height, 1, 1, player.getRotation());
-            //game.getBatch().draw(player.getTankTop(), player.rectangle.x, player.rectangle.y, player.rectangle.width / 2, player.rectangle.height / 2, player.rectangle.width, player.rectangle.height, 1, 1, player.getRotation());
         }
 
         for (Bullet bullet : GameManager.getInstance().getBullets()) {
             mapBoundsHandlerBullet.handleBulletCollision(bullet, deltaTime);
+            game.getBatch().setColor(bullet.getColor());
             game.getBatch().draw(bullet.getTextureRegion(), bullet.getBounds().x, bullet.getBounds().y, bullet.getBounds().width, bullet.getBounds().height);
+            game.getBatch().setColor(Color.WHITE);
         }
 
         // Draw scores

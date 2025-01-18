@@ -83,7 +83,7 @@ public class Player {
     }
 
     public void shoot() {
-        assetManager.get(AssetDescriptors.SHOOT_WAV).play(0.5f);
+        assetManager.get(AssetDescriptors.SHOOT_WAV).play(0.01f);
         // Bullet dimensions
         float bulletWidth = 10;
         float bulletHeight = 10;

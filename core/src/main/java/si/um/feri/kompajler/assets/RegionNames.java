@@ -8,6 +8,8 @@ public class RegionNames {
     public static final String TANK_BOTTOM_RED = "img4";
     public static final String TANK_TOP_RED = "tank-top-red";
     public static final String BULLET = "bullet";
+    public static String PRE_GAME_SCREEN = "pre-game-screen";
+
 
     private RegionNames() {
     }
