@@ -71,29 +71,36 @@ public class InfoScreen implements Screen {
         JSONArray workingHours = restaurant.optJSONArray("workingHours");
         JSONArray tags = restaurant.optJSONArray("tags");
 
-        StringBuilder workingHoursTextOnly = new StringBuilder("Working Hours:\n");
-        StringBuilder workingHoursText = new StringBuilder("");
+        String workingHoursTitle = "Working Hours:";
+        StringBuilder workingHoursText = new StringBuilder();
         if (workingHours != null) {
             for (int i = 0; i < workingHours.length(); i++) {
                 JSONObject day = workingHours.getJSONObject(i);
-                workingHoursText.append(day.optString("day")).append(": ")
-                    .append(day.optString("open")).append(" - ")
-                    .append(day.optString("close")).append("\n");
-            }
-        }
-
-        StringBuilder tagsText = new StringBuilder("Tags:\n");
-        if (tags != null) {
-            for (int i = 0; i < tags.length(); i++) {
-                tagsText.append(tags.getJSONObject(i).optString("name"));
-                if (i < tags.length() - 1) {
-                    tagsText.append(", ");
+                if (i == workingHours.length() - 1) {
+                    workingHoursText.append("      ").append(day.optString("day")).append(": ")
+                        .append(day.optString("open")).append(" - ")
+                        .append(day.optString("close"));
+                } else {
+                    workingHoursText.append("      ").append(day.optString("day")).append(": ")
+                        .append(day.optString("open")).append(" - ")
+                        .append(day.optString("close")).append("\n");
                 }
             }
         }
 
-        Label.LabelStyle labelStyle = new Label.LabelStyle(game.assetManager.get(AssetDescriptors.SS_TEXT), Color.WHITE);
-        labelStyle.font.getData().setScale(0.4f);
+        StringBuilder tagsText = new StringBuilder("Tags:\n      ");
+        if (tags != null) {
+            for (int i = 0; i < tags.length(); i++) {
+                tagsText.append(tags.getJSONObject(i).optString("name"));
+                if (i < tags.length() - 1) {
+                    if ((i + 1) % 3 == 0) {
+                        tagsText.append("\n      ");
+                    } else {
+                        tagsText.append(", ");
+                    }
+                }
+            }
+        }
 
         // Fetch menu data from the API
         jsonResponse = ApiHelper.makeGetRequest(AssetPaths.URL + "menus");
@@ -103,7 +110,7 @@ public class InfoScreen implements Screen {
             System.out.println("Failed to fetch data from the API.");
         }
 
-        StringBuilder menuDetails = new StringBuilder("Menus:\n");
+        StringBuilder menuDetails = new StringBuilder("Menus:\n       ");
         menus = new JSONArray(jsonResponse);
 
         for (int i = 0; i < menus.length(); i++) {
@@ -114,11 +121,14 @@ public class InfoScreen implements Screen {
                 StringBuilder sides = new StringBuilder();
                 for (int j = 0; j < sideDishes.length(); j++) {
                     sides.append(sideDishes.getString(j));
-                    if (j < sideDishes.length() - 1) sides.append(", ");
+                    if (j < sideDishes.length() - 1) sides.append(", \n          ");
                 }
-                menuDetails.append(dish).append(" - Side Dishes: ").append(sides).append("\n");
+                menuDetails.append(String.format("%s\n          Side Dishes: %s\n       ", dish, sides.toString()));
             }
         }
+
+
+        Label.LabelStyle labelStyle = new Label.LabelStyle(game.assetManager.get(AssetDescriptors.SS_TEXT), Color.WHITE);
 
         // Display menu details in a UI Label inside the `InfoScreen`
         Label menuLabel = new Label(menuDetails.toString(), skin);
@@ -130,13 +140,15 @@ public class InfoScreen implements Screen {
 
         Table table = new Table();
         table.defaults().pad(5 * camera.zoom);
+        labelStyle.font.getData().setScale(0.6f);
         table.add(new Label(name, labelStyle)).left().row();
-        table.add(new Label("Address: " + address, labelStyle)).left().row();
-        table.add(new Label("Rating: " + averageRating, labelStyle)).left().row();
-        table.add(new Label(workingHoursTextOnly.toString(), labelStyle)).row();
-        table.add(new Label(workingHoursText.toString(), labelStyle)).row();
-        table.add(new Label(tagsText.toString(), labelStyle)).left().row();
-        table.add(new Label(menuDetails.toString(), labelStyle)).row();
+        labelStyle.font.getData().setScale(0.4f);
+        table.add(new Label("   Address: " + address, labelStyle)).left().row();
+        table.add(new Label("   Rating: " + averageRating, labelStyle)).left().row();
+        table.add(new Label("   " + workingHoursTitle, labelStyle)).left().row();
+        table.add(new Label(workingHoursText.toString(), labelStyle)).left().row();
+        table.add(new Label("   " + tagsText.toString(), labelStyle)).left().row();
+        table.add(new Label("   " + menuDetails.toString(), labelStyle)).left().row();
 
         // Set up scrollable window
         ScrollPane scrollPane = new ScrollPane(table, skin);
