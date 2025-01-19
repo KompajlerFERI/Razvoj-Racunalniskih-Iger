@@ -22,7 +22,14 @@ import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Window;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -49,6 +56,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     private final DigitalniDvojcek game;
     private ShapeRenderer shapeRenderer;
     private Vector3 touchPosition;
+    private Stage stage;
 
     private TiledMap tiledMap;
     private TiledMapRenderer tiledMapRenderer;
@@ -70,6 +78,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
     Texture texture_normal, texture_vegan, texture_pizza;
     Skin skin;
+    Window window;
 
     private JSONObject selectedRestaurant = null;
     private Vector2 selectedRestaurantPosition = null;
@@ -94,6 +103,9 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         assetManager = game.assetManager;
         skin = assetManager.get(AssetDescriptors.UI_SKIN);
 
+        stage = new Stage(viewport, batch);
+        Gdx.input.setInputProcessor(stage);
+        window = null;
 
         GestureDetector gestureDetector = new GestureDetector(this);
         Gdx.input.setInputProcessor(gestureDetector);
@@ -176,32 +188,38 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             if (selectedRestaurant != null) {
                 drawPopUpWindow(selectedRestaurant, selectedRestaurantPosition);
             }
+            else {
+                if (window != null) {
+                    window.remove();
+                    window = null;
+                }
+            }
+            stage.act(delta);
+            stage.draw();
         }
     }
 
     private void drawPopUpWindow(JSONObject restaurant, Vector2 position) {
-        float width = 300 * camera.zoom;
-        float height = 150 * camera.zoom;
-        float padding = 10 * camera.zoom;
+        float width = viewport.getScreenWidth() * camera.zoom * 0.8f;
+        float height = viewport.getScreenHeight() * camera.zoom * 0.5f;
 
         String name = restaurant.optString("name", "Unknown");
         String address = restaurant.optString("address", "No address available");
-        String owner = restaurant.optString("owner", "Unknown owner");
-        double mealPrice = restaurant.optDouble("mealPrice", 0.0);
-        double mealSurcharge = restaurant.optDouble("mealSurcharge", 0.0);
+        float averageRating = restaurant.optFloat("averageRating", 0);
 
         JSONArray workingHours = restaurant.optJSONArray("workingHours");
+        JSONArray tags = restaurant.optJSONArray("tags");
+
         StringBuilder workingHoursText = new StringBuilder("Working Hours:\n");
         if (workingHours != null) {
             for (int i = 0; i < workingHours.length(); i++) {
                 JSONObject day = workingHours.getJSONObject(i);
-                workingHoursText.append(day.optString("day")).append(": ");
-                workingHoursText.append(day.optString("open")).append(" - ");
-                workingHoursText.append(day.optString("close")).append("\n");
+                workingHoursText.append(day.optString("day")).append(": ")
+                    .append(day.optString("open")).append(" - ")
+                    .append(day.optString("close")).append("\n");
             }
         }
 
-        JSONArray tags = restaurant.optJSONArray("tags");
         StringBuilder tagsText = new StringBuilder("Tags:\n");
         if (tags != null) {
             for (int i = 0; i < tags.length(); i++) {
@@ -209,47 +227,50 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             }
         }
 
-        JSONArray ratings = restaurant.optJSONArray("ratings");
-        float averageRating = restaurant.optFloat("averageRating", 0);
-        String ratingsText = "Average Rating: " + averageRating;
+        // Create a table for layout
+        Table table = new Table();
+        table.defaults().pad(5 * camera.zoom);
+        table.add(new Label(name, skin)).row();
+        table.add(new Label("Address: " + address, skin)).row();
+        table.add(new Label("Rating: " + averageRating, skin)).row();
+        table.add(new Label(workingHoursText.toString(), skin)).row();
+        table.add(new Label(tagsText.toString(), skin)).row();
 
-        float contentHeight = height;
-        float textHeight = (tagsText.length() + workingHoursText.length()) * 1.2f;
-        if (textHeight > height - 50) {
-            contentHeight += textHeight - height + 50;
+        ScrollPane scrollPane = new ScrollPane(table, skin);
+        float newX = position.x - width / 2;
+        float newY = position.y - height - 5f;
+        window = new Window("Restaurant Info", skin);
+        window.setSize(width, height);
+        window.setPosition(newX, newY);
+        window.add(scrollPane).fill().expand();
+
+        if (newX < 0) {
+            camera.position.set(GameConfig.getWidth() / 2 * camera.zoom, position.y + 100f, 0);
+            window.setPosition(GameConfig.getHeight() / 2 * camera.zoom - width / 2, newY);
+        }
+        else if (newX > GameConfig.getWidth()) {
+            camera.position.set(position.x - width, position.y - 100f, 0);
+            window.setPosition(position.x - width / 2, newY);
+        }
+        else {
+            camera.position.set(position.x, position.y - 100f, 0);
+        }
+        if (newY < 0) {
+            camera.position.set(GameConfig.getHeight() / 2 * camera.zoom, position.y + 100f, 0);
+            window.setPosition(newX, position.y + 100f - height / 2);
+        }
+        else if (newY > GameConfig.getHeight()) {
+            camera.position.set(camera.position.x, position.y - 100f, 0);
+            window.setPosition(newX, position.y - 100f - height / 2);
+        }
+        else {
+            camera.position.set(camera.position.x, position.y - 100f, 0);
         }
 
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(new Color(0, 0, 0, 0.7f));
-        shapeRenderer.rect(position.x - width / 2, position.y - contentHeight, width, contentHeight);
-        shapeRenderer.end();
-
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(Color.WHITE);
-        shapeRenderer.rect(position.x - width / 2, position.y - contentHeight, width, contentHeight);
-        shapeRenderer.end();
-
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-
-        BitmapFont font = skin.getFont("font-label");
-        font.setColor(Color.WHITE);
-
-        float fontSize = 20 * camera.zoom;
-        font.getData().setScale(fontSize / 20);
-
-        font.draw(batch, name, position.x - width / 2 + padding, position.y - padding);
-        font.draw(batch, address, position.x - width / 2 + padding, position.y - padding - 20 * camera.zoom);
-        font.draw(batch, ratingsText, position.x - width / 2 + padding, position.y - padding - 40 * camera.zoom);
-
-        float contentY = position.y - padding - 60 * camera.zoom;
-        font.draw(batch, workingHoursText.toString(), position.x - width / 2 + padding, contentY);
-
-        contentY -= (workingHoursText.length() * 1.2f);
-        font.draw(batch, tagsText.toString(), position.x - width / 2 + padding, contentY);
-
-        batch.end();
+        camera.zoom = 0.5f;
+        camera.update();
+        stage.clear();
+        stage.addActor(window);
     }
 
     @Override
@@ -310,8 +331,10 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
     @Override
     public boolean touchDown(float x, float y, int pointer, int button) {
-        touchPosition.set(x, y, 0);
-        camera.unproject(touchPosition);
+        if (window == null) {
+            touchPosition.set(x, y, 0);
+            camera.unproject(touchPosition);
+        }
         return false;
     }
 
