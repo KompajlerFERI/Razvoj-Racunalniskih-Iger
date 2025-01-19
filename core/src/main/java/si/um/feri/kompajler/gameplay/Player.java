@@ -1,9 +1,9 @@
-package si.um.feri.kompajler.gameplay;
+package main.java.si.um.feri.kompajler.gameplay;
 
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
-import si.um.feri.kompajler.assets.RegionNames;
+import main.java.si.um.feri.kompajler.assets.RegionNames;
 
 public class Player {
     private int hitpoints;

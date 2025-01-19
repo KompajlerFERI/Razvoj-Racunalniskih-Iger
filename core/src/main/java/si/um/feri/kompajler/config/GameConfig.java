@@ -1,13 +1,13 @@
-package si.um.feri.kompajler.config;
+package main.java.si.um.feri.kompajler.config;
 
 public class GameConfig {
     private static final float WORLD_UNIT = 10;
 
-    private static float WIDTH = 500;
-    private static float HEIGHT = 500;
+    private static float WIDTH = 80;
+    private static float HEIGHT = 80;
 
-    private static float HUD_WIDTH = 500;
-    private static float HUD_HEIGHT = 600;
+    private static float HUD_WIDTH = 80;
+    private static float HUD_HEIGHT = 80;
 
     private static float PLAYER_WIDTH = 30;
     private static float PLAYER_HEIGHT = 30;
@@ -32,7 +32,7 @@ public class GameConfig {
     // TO 100 PIXELS, YOU NEED TO SET IT TO 10
     // (DIVIDE BY 10)
     public static float getWidth() {
-        return scale(WIDTH) * WORLD_UNIT;
+        return WIDTH * WORLD_UNIT;
     }
 
     // GET IN WORLD UNITS AND NOT PIXELS
@@ -40,7 +40,7 @@ public class GameConfig {
     // TO 100 PIXELS, YOU NEED TO SET IT TO 10
     // (DIVIDE BY 10)
     public static float getHeight() {
-        return scale(HEIGHT) * WORLD_UNIT;
+        return HEIGHT * WORLD_UNIT;
     }
 
     // GET IN WORLD UNITS AND NOT PIXELS
@@ -48,7 +48,7 @@ public class GameConfig {
     // TO 100 PIXELS, YOU NEED TO SET IT TO 10
     // (DIVIDE BY 10)
     public static float getHudWidth() {
-        return scale(HUD_WIDTH) * WORLD_UNIT;
+        return HUD_WIDTH * WORLD_UNIT;
     }
 
     // GET IN WORLD UNITS AND NOT PIXELS
@@ -56,7 +56,7 @@ public class GameConfig {
     // TO 100 PIXELS, YOU NEED TO SET IT TO 10
     // (DIVIDE BY 10)
     public static float getHudHeight() {
-        return scale(HUD_HEIGHT) * WORLD_UNIT;
+        return HUD_HEIGHT * WORLD_UNIT;
     }
 
     // GET IN WORLD UNITS AND NOT PIXELS
@@ -64,7 +64,7 @@ public class GameConfig {
     // TO 100 PIXELS, YOU NEED TO SET IT TO 10
     // (DIVIDE BY 10)
     public static float getPlayerWidth() {
-        return scale(PLAYER_WIDTH) * WORLD_UNIT;
+        return PLAYER_WIDTH * WORLD_UNIT;
     }
 
     // GET IN WORLD UNITS AND NOT PIXELS
@@ -72,7 +72,7 @@ public class GameConfig {
     // TO 100 PIXELS, YOU NEED TO SET IT TO 10
     // (DIVIDE BY 10)
     public static float getPlayerHeight() {
-        return scale(PLAYER_HEIGHT) * WORLD_UNIT;
+        return PLAYER_HEIGHT * WORLD_UNIT;
     }
 
 

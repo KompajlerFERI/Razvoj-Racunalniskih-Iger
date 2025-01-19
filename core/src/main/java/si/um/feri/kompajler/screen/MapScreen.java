@@ -3,11 +3,13 @@ package main.java.si.um.feri.kompajler.screen;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.input.GestureDetector;
@@ -20,19 +22,25 @@ import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import main.java.si.um.feri.kompajler.DigitalniDvojcek;
+import main.java.si.um.feri.kompajler.assets.AssetDescriptors;
 import main.java.si.um.feri.kompajler.utils.ApiHelper;
 import main.java.si.um.feri.kompajler.utils.Constants;
 import main.java.si.um.feri.kompajler.utils.Geolocation;
 import main.java.si.um.feri.kompajler.utils.MapRasterTiles;
 import main.java.si.um.feri.kompajler.utils.ZoomXY;
+import main.java.si.um.feri.kompajler.config.GameConfig;
 
 import java.io.IOException;
 
@@ -47,6 +55,8 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     private OrthographicCamera camera;
     private SpriteBatch batch;
     private Viewport viewport;
+    private AssetManager assetManager;
+    private TextureAtlas gameAtlas;
 
     private Texture[] mapTiles;
     private ZoomXY beginTile;   // top left tile
@@ -54,12 +64,15 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     // center geolocation
     private final Geolocation CENTER_GEOLOCATION = new Geolocation(46.545195, 15.644645);
 
-
     String jsonResponse = null;
     JSONArray restaurants = null;
     Vector2 locationPlaceholder = null;
 
     Texture texture_normal, texture_vegan, texture_pizza;
+    Skin skin;
+
+    private JSONObject selectedRestaurant = null;
+    private Vector2 selectedRestaurantPosition = null;
 
     public MapScreen(DigitalniDvojcek game) {
         this.game = game;
@@ -78,6 +91,9 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         camera.viewportHeight = Constants.MAP_HEIGHT / 2f;
         camera.zoom = 2f;
         camera.update();
+        assetManager = game.assetManager;
+        skin = assetManager.get(AssetDescriptors.UI_SKIN);
+
 
         GestureDetector gestureDetector = new GestureDetector(this);
         Gdx.input.setInputProcessor(gestureDetector);
@@ -128,11 +144,8 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0, 0, 0, 1);
-
         handleInput();
-
         camera.update();
-
         tiledMapRenderer.setView(camera);
         tiledMapRenderer.render();
 
@@ -158,8 +171,45 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
             locationPlaceholder = MapRasterTiles.getPixelPosition(latitude, longitude, beginTile.x, beginTile.y);
             drawMarkers(camera, batch, locationPlaceholder, hasVeganTag, hasPizzaTag);
+
+            if (selectedRestaurant != null) {
+                drawPopUpWindow(selectedRestaurant, selectedRestaurantPosition);
+            }
         }
     }
+
+    private void drawPopUpWindow(JSONObject restaurant, Vector2 position) {
+        float width = 300 * camera.zoom;
+        float height = 150 * camera.zoom;
+        float padding = 10 * camera.zoom;
+
+        String name = restaurant.optString("name", "Unknown");
+        String address = restaurant.optString("address", "No address available");
+
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(new Color(0, 0, 0, 0.7f));
+        shapeRenderer.rect(position.x - width / 2, position.y - height, width, height);
+        shapeRenderer.end();
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.WHITE);
+        shapeRenderer.rect(position.x - width / 2, position.y - height, width, height);
+        shapeRenderer.end();
+
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+
+        BitmapFont font = skin.getFont("font-label");
+        font.setColor(Color.WHITE);
+
+        font.draw(batch, name, position.x - width / 2 + padding, position.y - padding);
+
+        font.draw(batch, address, position.x - width / 2 + padding, position.y - padding - 20 * camera.zoom);
+
+        batch.end();
+    }
+
 
     @Override
     public void resize(int width, int height) {
@@ -227,9 +277,57 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     // RETURNS IN WORLD UNITS
     @Override
     public boolean tap(float x, float y, int count, int button) {
+        // Convert screen coordinates to world coordinates
         float[] worldCoords = convertToWorld(x, y, camera);
-        System.out.println("Tapped at: " + GameConfig.scaleToWoldUnits(worldCoords[0]) + ", " + worldCoords[1]);
+        float tapX = worldCoords[0];
+        float tapY = worldCoords[1];
+
+        float closestDistanceSquared = Float.MAX_VALUE;
+        JSONObject closestRestaurant = null;
+        Vector2 closestPinPosition = null;
+
+        // Loop through all the restaurants and check the distance to the pin
+        for (int i = 0; i < restaurants.length(); i++) {
+            JSONObject restaurant = restaurants.getJSONObject(i);
+            JSONObject location = restaurant.getJSONObject("location");
+            JSONArray coordinates = location.getJSONArray("coordinates");
+            double latitude = coordinates.getDouble(1);
+            double longitude = coordinates.getDouble(0);
+
+            // Get the position of the pin on the screen
+            Vector2 pinPosition = MapRasterTiles.getPixelPosition(latitude, longitude, beginTile.x, beginTile.y);
+
+            // Calculate the squared distance between the tapped position and the pin position
+            float deltaX = tapX - pinPosition.x;
+            float deltaY = tapY - pinPosition.y;
+            float distanceSquared = deltaX * deltaX + deltaY * deltaY;
+
+            // Adjust tolerance for the marker's clickable area based on zoom level
+            float pinRadius = 16f * camera.zoom; // Scale the clickable radius based on zoom level
+            float markerRadiusSquared = pinRadius * pinRadius;
+
+            // If the tap is within the marker's clickable area, update the closest restaurant
+            if (distanceSquared <= markerRadiusSquared && distanceSquared < closestDistanceSquared) {
+                closestDistanceSquared = distanceSquared;
+                closestRestaurant = restaurant;
+                closestPinPosition = pinPosition;
+            }
+        }
+
+        // If we found the closest restaurant, select it
+        if (closestRestaurant != null) {
+            selectedRestaurant = closestRestaurant;
+            selectedRestaurantPosition = closestPinPosition;
+        }
+
         return true;
+    }
+
+
+
+    private boolean pinClicked(float x, float y, Vector2 pinPosition) {
+        float pinRadius = 10; // Adjust as needed
+        return Math.abs(x - pinPosition.x) < pinRadius && Math.abs(y - pinPosition.y) < pinRadius;
     }
 
     private float[] convertToWorld(float screenX, float screenY, Camera camera) {

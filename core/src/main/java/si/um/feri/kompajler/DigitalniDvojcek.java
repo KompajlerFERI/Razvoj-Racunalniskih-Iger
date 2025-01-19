@@ -8,9 +8,11 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+import main.java.si.um.feri.kompajler.assets.AssetDescriptors;
 import main.java.si.um.feri.kompajler.screen.GameplayScreen;
 import main.java.si.um.feri.kompajler.screen.MapScreen;
 
@@ -18,8 +20,7 @@ import main.java.si.um.feri.kompajler.screen.MapScreen;
 public class DigitalniDvojcek extends Game {
     private SpriteBatch batch;
     private Texture image;
-
-    private AssetManager assetManager;
+    public AssetManager assetManager;
 
     // Dev branch :D
 
@@ -29,9 +30,9 @@ public class DigitalniDvojcek extends Game {
         image = new Texture("libgdx.png");
 
         assetManager = new AssetManager();
-        // tu laodaj ce mas kake assete za loadat
-
+        assetManager.load(AssetDescriptors.UI_SKIN);
         assetManager.finishLoading();
+        // tu laodaj ce mas kake assete za loadat
 
         setScreen(new MapScreen(this)); //to je temporary pol naj bo nastavleno na main screen al kaj pac bo
     }
