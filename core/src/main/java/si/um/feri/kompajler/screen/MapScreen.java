@@ -99,6 +99,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         Gdx.input.setInputProcessor(gestureDetector);
 
         touchPosition = new Vector3();
+        // vem da naj bi z asset managerjem delal
         texture_normal = new Texture("map_screen/pin_normal_low_rez.png");
         texture_vegan = new Texture("map_screen/pin_vegan_low_rez.png");
         texture_pizza = new Texture("map_screen/pin_pizza_low_rez.png");
@@ -183,18 +184,55 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         float height = 150 * camera.zoom;
         float padding = 10 * camera.zoom;
 
+        // Extract the restaurant details
         String name = restaurant.optString("name", "Unknown");
         String address = restaurant.optString("address", "No address available");
+        String owner = restaurant.optString("owner", "Unknown owner");
+        double mealPrice = restaurant.optDouble("mealPrice", 0.0);
+        double mealSurcharge = restaurant.optDouble("mealSurcharge", 0.0);
+
+        // Working hours (list of days and times)
+        JSONArray workingHours = restaurant.optJSONArray("workingHours");
+        StringBuilder workingHoursText = new StringBuilder("Working Hours:\n");
+        if (workingHours != null) {
+            for (int i = 0; i < workingHours.length(); i++) {
+                JSONObject day = workingHours.getJSONObject(i);
+                workingHoursText.append(day.optString("day")).append(": ");
+                workingHoursText.append(day.optString("open")).append(" - ");
+                workingHoursText.append(day.optString("close")).append("\n");
+            }
+        }
+
+        // Tags (list of restaurant tags)
+        JSONArray tags = restaurant.optJSONArray("tags");
+        StringBuilder tagsText = new StringBuilder("Tags:\n");
+        if (tags != null) {
+            for (int i = 0; i < tags.length(); i++) {
+                tagsText.append(tags.getJSONObject(i).optString("name")).append("\n");
+            }
+        }
+
+        // Ratings
+        JSONArray ratings = restaurant.optJSONArray("ratings");
+        float averageRating = restaurant.optFloat("averageRating", 0);
+        String ratingsText = "Average Rating: " + averageRating;
+
+        // Adjusting the height for scrolling content
+        float contentHeight = height;
+        float textHeight = (tagsText.length() + workingHoursText.length()) * 1.2f; // Estimate text height
+        if (textHeight > height - 50) {  // Allow some space for name and address
+            contentHeight += textHeight - height + 50;  // Expand the pop-up if content is long
+        }
 
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(new Color(0, 0, 0, 0.7f));
-        shapeRenderer.rect(position.x - width / 2, position.y - height, width, height);
+        shapeRenderer.rect(position.x - width / 2, position.y - contentHeight, width, contentHeight);
         shapeRenderer.end();
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.WHITE);
-        shapeRenderer.rect(position.x - width / 2, position.y - height, width, height);
+        shapeRenderer.rect(position.x - width / 2, position.y - contentHeight, width, contentHeight);
         shapeRenderer.end();
 
         batch.setProjectionMatrix(camera.combined);
@@ -203,12 +241,24 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         BitmapFont font = skin.getFont("font-label");
         font.setColor(Color.WHITE);
 
-        font.draw(batch, name, position.x - width / 2 + padding, position.y - padding);
+        float fontSize = 20 * camera.zoom;
+        font.getData().setScale(fontSize / 20);
 
+        // Drawing name, address, and other information
+        font.draw(batch, name, position.x - width / 2 + padding, position.y - padding);
         font.draw(batch, address, position.x - width / 2 + padding, position.y - padding - 20 * camera.zoom);
+        font.draw(batch, ratingsText, position.x - width / 2 + padding, position.y - padding - 40 * camera.zoom);
+
+        // Display working hours and tags (scrollable area logic can be added here for long text)
+        float contentY = position.y - padding - 60 * camera.zoom;  // Adjust starting Y position
+        font.draw(batch, workingHoursText.toString(), position.x - width / 2 + padding, contentY);
+
+        contentY -= (workingHoursText.length() * 1.2f); // Adjust based on the content height
+        font.draw(batch, tagsText.toString(), position.x - width / 2 + padding, contentY);
 
         batch.end();
     }
+
 
 
     @Override
