@@ -20,10 +20,10 @@ public class GameManager {
     public static int winner;
 
     static {
-        validPositions.add(new int[]{50, 50});
-        validPositions.add(new int[]{50, 1430});
-        validPositions.add(new int[]{1440, 50});
-        validPositions.add(new int[]{1440, 1430});
+        validPositions.add(new int[]{48, 48});
+        validPositions.add(new int[]{470, 470});
+        validPositions.add(new int[]{490, 48});
+        validPositions.add(new int[]{48, 490});
     }
 
     private GameManager() {

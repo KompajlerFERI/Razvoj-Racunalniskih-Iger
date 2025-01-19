@@ -35,20 +35,20 @@ public class Player {
         if (id == 0) {
             this.tankBottom = atlas.findRegion(RegionNames.TANK_BOTTOM_GREEN);
             //this.tankTop = atlas.findRegion(RegionNames.TANK_TOP_GREEN);
-            float width = tankBottom.getRegionWidth() * 3.2f;
-            float height = tankBottom.getRegionHeight() * 3.2f;
-            this.initialX = 50;
-            this.initialY = 50;
+            float width = tankBottom.getRegionWidth();
+            float height = tankBottom.getRegionHeight();
+            this.initialX = 48;
+            this.initialY = 48;
             this.rectangle = new Rectangle(50, 50, width, height);
         }
         if (id == 1) {
             this.tankBottom = atlas.findRegion(RegionNames.TANK_BOTTOM_RED);
             //this.tankTop = atlas.findRegion(RegionNames.TANK_TOP_RED);
-            float width = tankBottom.getRegionWidth() * 3.2f;
-            float height = tankBottom.getRegionHeight() * 3.2f;
-            this.initialX = 1440;
-            this.initialY = 1430;
-            this.rectangle = new Rectangle(1440, 1430, width, height);
+            float width = tankBottom.getRegionWidth();
+            float height = tankBottom.getRegionHeight();
+            this.initialX = 490;
+            this.initialY = 490;
+            this.rectangle = new Rectangle(448, 448, width, height);
         }
         this.rotation = 0;
         moving = false;
@@ -85,8 +85,8 @@ public class Player {
     public void shoot() {
         assetManager.get(AssetDescriptors.SHOOT_WAV).play(0.01f);
         // Bullet dimensions
-        float bulletWidth = 10;
-        float bulletHeight = 10;
+        float bulletWidth = 8;
+        float bulletHeight = 8;
 
         // Calculate bullet's initial position (at the front of the tank)
         float bulletX = rectangle.x + rectangle.width / 2 - bulletWidth / 2;

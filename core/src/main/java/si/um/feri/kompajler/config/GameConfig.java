@@ -10,9 +10,9 @@ public class GameConfig {
 
     public static final float PLAYER_WIDTH = 30;
     public static final float PLAYER_HEIGHT = 30;
-    public static final float PLAYER_SPEED = 2;
+    public static final float PLAYER_SPEED = 1;
 
-    public static final float BULLET_SPEED = 700;
+    public static final float BULLET_SPEED = 300;
 
     private GameConfig() {
     }

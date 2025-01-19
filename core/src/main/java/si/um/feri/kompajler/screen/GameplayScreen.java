@@ -62,7 +62,7 @@ public class GameplayScreen implements Screen {
         gameplayViewport = new FitViewport(GameConfig.WIDTH, GameConfig.HEIGHT);
         stage = new Stage(gameplayViewport, game.getBatch());
 
-        tiledMap = new TmxMapLoader().load("map/projekt-map.tmx");
+        tiledMap = new TmxMapLoader().load("map/tilemap.tmx");
         TiledMapTileLayer layer = (TiledMapTileLayer) tiledMap.getLayers().get("Background");
         float mapWidth = layer.getWidth() * layer.getTileWidth();
         float mapHeight = layer.getHeight() * layer.getTileHeight();
@@ -83,7 +83,7 @@ public class GameplayScreen implements Screen {
 
         shapeRenderer = new ShapeRenderer();
         font = new BitmapFont();
-        font.getData().setScale(5); // Scale the font size by 10
+        font.getData().setScale(2); // Scale the font size by 10
         layout = new GlyphLayout();
 
         assetManager.load(AssetDescriptors.GAMEPLAY_ATLAS);
