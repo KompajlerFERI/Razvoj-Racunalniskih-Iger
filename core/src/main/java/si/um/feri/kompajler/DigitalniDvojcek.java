@@ -10,11 +10,15 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
+
+import java.util.Map;
 
 import main.java.si.um.feri.kompajler.assets.AssetDescriptors;
 import main.java.si.um.feri.kompajler.screen.GameplayScreen;
 import main.java.si.um.feri.kompajler.screen.MapScreen;
+import main.java.si.um.feri.kompajler.utils.Constants;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class DigitalniDvojcek extends Game {
@@ -34,7 +38,10 @@ public class DigitalniDvojcek extends Game {
         assetManager.finishLoading();
         // tu laodaj ce mas kake assete za loadat
 
-        setScreen(new MapScreen(this)); //to je temporary pol naj bo nastavleno na main screen al kaj pac bo
+        Vector2 position = new Vector2(Constants.MAP_WIDTH / 2f, Constants.MAP_HEIGHT / 2f);
+        MapScreen mapScreen = new MapScreen(this, null);
+        mapScreen.fromBefore = false;
+        setScreen(mapScreen); //to je temporary pol naj bo nastavleno na main screen al kaj pac bo
     }
 
 //    @Override

@@ -3,8 +3,10 @@ package main.java.si.um.feri.kompajler.screen;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
@@ -31,14 +33,16 @@ public class InfoScreen implements Screen {
     private Stage stage;
     private Skin skin;
     private JSONObject restaurant;
+    MapScreen mapFromBefore;
 
     private Window window;
 
-    public InfoScreen(DigitalniDvojcek game, JSONObject restaurant) {
+    public InfoScreen(DigitalniDvojcek game, JSONObject restaurant, MapScreen mapFromBefore) {
         this.game = game;
         this.restaurant = restaurant;
         camera = new OrthographicCamera();
         batch = new SpriteBatch();
+        this.mapFromBefore = mapFromBefore;
     }
 
     @Override
@@ -105,7 +109,9 @@ public class InfoScreen implements Screen {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
-                game.setScreen(new MapScreen(game));  // Assuming MapScreen is properly defined
+                MapScreen mapScreen = new MapScreen(game, mapFromBefore);
+                mapScreen.fromBefore = true;
+                game.setScreen(new MapScreen(game, mapFromBefore));
             }
         });
 

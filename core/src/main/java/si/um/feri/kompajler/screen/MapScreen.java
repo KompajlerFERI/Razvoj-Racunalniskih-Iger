@@ -23,19 +23,11 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -47,7 +39,6 @@ import main.java.si.um.feri.kompajler.utils.Constants;
 import main.java.si.um.feri.kompajler.utils.Geolocation;
 import main.java.si.um.feri.kompajler.utils.MapRasterTiles;
 import main.java.si.um.feri.kompajler.utils.ZoomXY;
-import main.java.si.um.feri.kompajler.config.GameConfig;
 
 import java.io.IOException;
 
@@ -58,9 +49,13 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     private Vector3 touchPosition;
     private Stage stage;
 
+    public MapScreen mapFromBefore;
+    public boolean fromBefore = false;
+
     private TiledMap tiledMap;
     private TiledMapRenderer tiledMapRenderer;
     private OrthographicCamera camera;
+    private OrthographicCamera getCamera;
     private SpriteBatch batch;
     private Viewport viewport;
     private AssetManager assetManager;
@@ -84,21 +79,46 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     private JSONObject selectedRestaurant = null;
     private Vector2 selectedRestaurantPosition = null;
 
-    public MapScreen(DigitalniDvojcek game) {
+    public MapScreen(DigitalniDvojcek game, MapScreen mapFromBefore) {
         this.game = game;
-        shapeRenderer = new ShapeRenderer();
-        batch = new SpriteBatch();
-        camera = new OrthographicCamera();
+        this.mapFromBefore = mapFromBefore;
+
     }
 
     @Override
     public void show() {
-        viewport = new FitViewport(800, 800, camera);
-        camera.setToOrtho(false, Constants.MAP_WIDTH, Constants.MAP_HEIGHT);
-        camera.position.set(Constants.MAP_WIDTH / 2f, Constants.MAP_HEIGHT / 2f, 0);
-        camera.viewportWidth = Constants.MAP_WIDTH / 2f;
-        camera.viewportHeight = Constants.MAP_HEIGHT / 2f;
-        camera.zoom = 2f;
+        if (mapFromBefore == null) {
+            shapeRenderer = new ShapeRenderer();
+            batch = new SpriteBatch();
+            this.camera = new OrthographicCamera();
+            viewport = new FitViewport(800, 800, camera);
+            camera.viewportWidth = Constants.MAP_WIDTH / 2f;
+            camera.viewportHeight = Constants.MAP_HEIGHT / 2f;
+            camera.setToOrtho(false, Constants.MAP_WIDTH, Constants.MAP_HEIGHT);
+            camera.position.set(Constants.MAP_WIDTH / 2f, Constants.MAP_HEIGHT / 2f, 0);
+            camera.zoom = 2f;
+        } else {
+            this.camera = mapFromBefore.camera;
+            this.viewport = mapFromBefore.viewport;
+            this.batch = mapFromBefore.batch;
+            this.shapeRenderer = mapFromBefore.shapeRenderer;
+            this.touchPosition = mapFromBefore.touchPosition;
+            this.tiledMap = mapFromBefore.tiledMap;
+            this.tiledMapRenderer = mapFromBefore.tiledMapRenderer;
+            this.mapTiles = mapFromBefore.mapTiles;
+            this.beginTile = mapFromBefore.beginTile;
+            this.jsonResponse = mapFromBefore.jsonResponse;
+            this.restaurants = mapFromBefore.restaurants;
+            this.locationPlaceholder = mapFromBefore.locationPlaceholder;
+            this.texture_normal = mapFromBefore.texture_normal;
+            this.texture_vegan = mapFromBefore.texture_vegan;
+            this.texture_pizza = mapFromBefore.texture_pizza;
+            this.skin = mapFromBefore.skin;
+            this.window = mapFromBefore.window;
+            this.infoScreen = mapFromBefore.infoScreen;
+            this.selectedRestaurant = mapFromBefore.selectedRestaurant;
+            this.selectedRestaurantPosition = mapFromBefore.selectedRestaurantPosition;
+        }
         camera.update();
         assetManager = game.assetManager;
         skin = assetManager.get(AssetDescriptors.UI_SKIN);
@@ -106,7 +126,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         stage = new Stage(viewport, batch);
         Gdx.input.setInputProcessor(stage);
         window = null;
-        infoScreen = new InfoScreen(game, selectedRestaurant);
+        infoScreen = new InfoScreen(game, selectedRestaurant, this);
 
         GestureDetector gestureDetector = new GestureDetector(this);
         Gdx.input.setInputProcessor(gestureDetector);
@@ -405,7 +425,8 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         if (closestRestaurant != null && closestPinPosition != null) {
             selectedRestaurant = closestRestaurant;
             selectedRestaurantPosition = closestPinPosition;
-            game.setScreen(new InfoScreen(game, selectedRestaurant));
+            camera.update();
+            game.setScreen(new InfoScreen(game, selectedRestaurant, this));
         }
         // else if (
         //     window != null
@@ -419,11 +440,6 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         // }
 
         return true;
-    }
-
-    private boolean pinClicked(float x, float y, Vector2 pinPosition) {
-        float pinRadius = 10; // Adjust as needed
-        return Math.abs(x - pinPosition.x) < pinRadius && Math.abs(y - pinPosition.y) < pinRadius;
     }
 
     private float[] convertToWorld(float screenX, float screenY, Camera camera) {
@@ -491,12 +507,14 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             camera.translate(0, 9, 0);
         }
 
-        camera.zoom = MathUtils.clamp(camera.zoom, 0.5f, 1.9f);
+        if (!fromBefore) {
+            camera.zoom = MathUtils.clamp(camera.zoom, 0.5f, 1.9f);
 
-        float effectiveViewportWidth = camera.viewportWidth * camera.zoom;
-        float effectiveViewportHeight = camera.viewportHeight * camera.zoom;
+            float effectiveViewportWidth = camera.viewportWidth * camera.zoom;
+            float effectiveViewportHeight = camera.viewportHeight * camera.zoom;
 
-        camera.position.x = MathUtils.clamp(camera.position.x, effectiveViewportWidth / 2f, Constants.MAP_WIDTH - effectiveViewportWidth / 2f);
-        camera.position.y = MathUtils.clamp(camera.position.y, effectiveViewportHeight / 2f, Constants.MAP_HEIGHT - effectiveViewportHeight / 2f);
+            camera.position.x = MathUtils.clamp(camera.position.x, effectiveViewportWidth / 2f, Constants.MAP_WIDTH - effectiveViewportWidth / 2f);
+            camera.position.y = MathUtils.clamp(camera.position.y, effectiveViewportHeight / 2f, Constants.MAP_HEIGHT - effectiveViewportHeight / 2f);
+        }
     }
 }
