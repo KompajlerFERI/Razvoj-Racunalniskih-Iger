@@ -79,6 +79,9 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         camera.zoom = 2f;
         camera.update();
 
+        GestureDetector gestureDetector = new GestureDetector(this);
+        Gdx.input.setInputProcessor(gestureDetector);
+
         touchPosition = new Vector3();
         texture_normal = new Texture("map_screen/pin_normal_low_rez.png");
         texture_vegan = new Texture("map_screen/pin_vegan_low_rez.png");
@@ -135,7 +138,6 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
         for (int i = 0; i < restaurants.length(); i++) {
             JSONObject restaurant = restaurants.getJSONObject(i);
-            String name = restaurant.getString("name");
             JSONObject location = restaurant.getJSONObject("location");
             JSONArray coordinates = location.getJSONArray("coordinates");
             double latitude = coordinates.getDouble(1);  // Index 1 for latitude
@@ -222,9 +224,17 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         return false;
     }
 
+    // RETURNS IN WORLD UNITS
     @Override
     public boolean tap(float x, float y, int count, int button) {
-        return false;
+        float[] worldCoords = convertToWorld(x, y, camera);
+        System.out.println("Tapped at: " + GameConfig.scaleToWoldUnits(worldCoords[0]) + ", " + worldCoords[1]);
+        return true;
+    }
+
+    private float[] convertToWorld(float screenX, float screenY, Camera camera) {
+        Vector3 worldCoords = camera.unproject(new Vector3(screenX, screenY, 0));
+        return new float[]{worldCoords.x, worldCoords.y};
     }
 
     @Override
