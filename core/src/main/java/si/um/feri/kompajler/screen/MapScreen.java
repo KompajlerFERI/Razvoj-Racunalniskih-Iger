@@ -184,14 +184,12 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         float height = 150 * camera.zoom;
         float padding = 10 * camera.zoom;
 
-        // Extract the restaurant details
         String name = restaurant.optString("name", "Unknown");
         String address = restaurant.optString("address", "No address available");
         String owner = restaurant.optString("owner", "Unknown owner");
         double mealPrice = restaurant.optDouble("mealPrice", 0.0);
         double mealSurcharge = restaurant.optDouble("mealSurcharge", 0.0);
 
-        // Working hours (list of days and times)
         JSONArray workingHours = restaurant.optJSONArray("workingHours");
         StringBuilder workingHoursText = new StringBuilder("Working Hours:\n");
         if (workingHours != null) {
@@ -203,7 +201,6 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             }
         }
 
-        // Tags (list of restaurant tags)
         JSONArray tags = restaurant.optJSONArray("tags");
         StringBuilder tagsText = new StringBuilder("Tags:\n");
         if (tags != null) {
@@ -212,16 +209,14 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             }
         }
 
-        // Ratings
         JSONArray ratings = restaurant.optJSONArray("ratings");
         float averageRating = restaurant.optFloat("averageRating", 0);
         String ratingsText = "Average Rating: " + averageRating;
 
-        // Adjusting the height for scrolling content
         float contentHeight = height;
-        float textHeight = (tagsText.length() + workingHoursText.length()) * 1.2f; // Estimate text height
-        if (textHeight > height - 50) {  // Allow some space for name and address
-            contentHeight += textHeight - height + 50;  // Expand the pop-up if content is long
+        float textHeight = (tagsText.length() + workingHoursText.length()) * 1.2f;
+        if (textHeight > height - 50) {
+            contentHeight += textHeight - height + 50;
         }
 
         shapeRenderer.setProjectionMatrix(camera.combined);
@@ -244,22 +239,18 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         float fontSize = 20 * camera.zoom;
         font.getData().setScale(fontSize / 20);
 
-        // Drawing name, address, and other information
         font.draw(batch, name, position.x - width / 2 + padding, position.y - padding);
         font.draw(batch, address, position.x - width / 2 + padding, position.y - padding - 20 * camera.zoom);
         font.draw(batch, ratingsText, position.x - width / 2 + padding, position.y - padding - 40 * camera.zoom);
 
-        // Display working hours and tags (scrollable area logic can be added here for long text)
-        float contentY = position.y - padding - 60 * camera.zoom;  // Adjust starting Y position
+        float contentY = position.y - padding - 60 * camera.zoom;
         font.draw(batch, workingHoursText.toString(), position.x - width / 2 + padding, contentY);
 
-        contentY -= (workingHoursText.length() * 1.2f); // Adjust based on the content height
+        contentY -= (workingHoursText.length() * 1.2f);
         font.draw(batch, tagsText.toString(), position.x - width / 2 + padding, contentY);
 
         batch.end();
     }
-
-
 
     @Override
     public void resize(int width, int height) {
@@ -298,8 +289,8 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
         // Draw the texture at the marker position
         float camZoom = camera.zoom; // Set a fixed size for the pin
-        float pinWidth = camZoom * texture.getWidth() / 2;
-        float pinHeight = camZoom * texture.getHeight() / 2;
+        float pinWidth = camZoom * texture.getWidth() / 2 * 0.8f;
+        float pinHeight = camZoom * texture.getHeight() / 2 * 0.8f;
         spriteBatch.draw(texture, marker.x - pinWidth / 2, marker.y, pinWidth, pinHeight);
         spriteBatch.end();
     }
@@ -369,11 +360,13 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             selectedRestaurant = closestRestaurant;
             selectedRestaurantPosition = closestPinPosition;
         }
+        else {
+            selectedRestaurant = null;
+            selectedRestaurantPosition = null;
+        }
 
         return true;
     }
-
-
 
     private boolean pinClicked(float x, float y, Vector2 pinPosition) {
         float pinRadius = 10; // Adjust as needed
