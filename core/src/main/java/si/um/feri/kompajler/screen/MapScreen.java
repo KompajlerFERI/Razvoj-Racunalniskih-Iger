@@ -71,7 +71,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     JSONArray restaurants = null;
     Vector2 locationPlaceholder = null;
 
-    Texture texture_normal, texture_vegan, texture_pizza;
+    Texture texture_normal, texture_vegan, texture_pizza, texture_pizzanvegan;
     Skin skin;
     Window window;
     InfoScreen infoScreen;
@@ -137,6 +137,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         texture_normal = new Texture("map_screen/pin_normal_low_rez.png");
         texture_vegan = new Texture("map_screen/pin_vegan_low_rez.png");
         texture_pizza = new Texture("map_screen/pin_pizza_low_rez.png");
+        texture_pizzanvegan = new Texture("map_screen/pin_pizzanvegan_low_rez.png");
 
         try {
             //in most cases, geolocation won't be in the center of the tile because tile borders are predetermined (geolocation can be at the corner of a tile)
@@ -327,12 +328,14 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
         // Choose the appropriate texture based on tags
         Texture texture;
-        if (isPizza) {
-            texture = texture_normal;
+        if (isPizza && isVegan) {
+            texture = texture_pizzanvegan;
         } else if (isVegan) {
             texture = texture_vegan;
-        } else {
+        } else if (isPizza) {
             texture = texture_pizza;
+        } else {
+            texture = texture_normal;
         }
 
         // Draw the texture at the marker position
