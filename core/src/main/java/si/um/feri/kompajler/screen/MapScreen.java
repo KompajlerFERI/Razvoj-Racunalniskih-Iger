@@ -79,20 +79,20 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     Texture texture_normal, texture_vegan, texture_pizza;
     Skin skin;
     Window window;
+    InfoScreen infoScreen;
 
     private JSONObject selectedRestaurant = null;
     private Vector2 selectedRestaurantPosition = null;
 
     public MapScreen(DigitalniDvojcek game) {
         this.game = game;
+        shapeRenderer = new ShapeRenderer();
+        batch = new SpriteBatch();
+        camera = new OrthographicCamera();
     }
 
     @Override
     public void show() {
-        shapeRenderer = new ShapeRenderer();
-        batch = new SpriteBatch();
-
-        camera = new OrthographicCamera();
         viewport = new FitViewport(800, 800, camera);
         camera.setToOrtho(false, Constants.MAP_WIDTH, Constants.MAP_HEIGHT);
         camera.position.set(Constants.MAP_WIDTH / 2f, Constants.MAP_HEIGHT / 2f, 0);
@@ -106,6 +106,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         stage = new Stage(viewport, batch);
         Gdx.input.setInputProcessor(stage);
         window = null;
+        infoScreen = new InfoScreen(game, selectedRestaurant);
 
         GestureDetector gestureDetector = new GestureDetector(this);
         Gdx.input.setInputProcessor(gestureDetector);
@@ -186,7 +187,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             drawMarkers(camera, batch, locationPlaceholder, hasVeganTag, hasPizzaTag);
 
             if (selectedRestaurant != null) {
-                drawPopUpWindow(selectedRestaurant, selectedRestaurantPosition);
+                // drawPopUpWindow(selectedRestaurant, selectedRestaurantPosition);
             }
             else {
                 if (window != null) {
@@ -199,6 +200,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         }
     }
 
+    /*
     private void drawPopUpWindow(JSONObject restaurant, Vector2 position) {
         float width = viewport.getScreenWidth() * camera.zoom * 0.8f;
         float height = viewport.getScreenHeight() * camera.zoom * 0.5f;
@@ -275,6 +277,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         stage.clear();
         stage.addActor(window);
     }
+    */
 
     @Override
     public void resize(int width, int height) {
@@ -399,20 +402,21 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             }
         }
 
-        if (closestRestaurant != null) {
+        if (closestRestaurant != null && closestPinPosition != null) {
             selectedRestaurant = closestRestaurant;
             selectedRestaurantPosition = closestPinPosition;
+            game.setScreen(new InfoScreen(game, selectedRestaurant));
         }
-        else if (
-            window != null
-            && (tapX < window.getX()
-            || tapX > window.getX() + window.getWidth()
-            || tapY < window.getY()
-            || tapY > window.getY() + window.getHeight())
-        ) {
-            selectedRestaurant = null;
-            selectedRestaurantPosition = null;
-        }
+        // else if (
+        //     window != null
+        //     && (tapX < window.getX()
+        //     || tapX > window.getX() + window.getWidth()
+        //     || tapY < window.getY()
+        //     || tapY > window.getY() + window.getHeight())
+        // ) {
+        //     selectedRestaurant = null;
+        //     selectedRestaurantPosition = null;
+        // }
 
         return true;
     }
