@@ -35,6 +35,7 @@ public class DigitalniDvojcek extends Game {
 
         assetManager = new AssetManager();
         assetManager.load(AssetDescriptors.UI_SKIN);
+        assetManager.load(AssetDescriptors.SS_TEXT);
         assetManager.finishLoading();
         // tu laodaj ce mas kake assete za loadat
 

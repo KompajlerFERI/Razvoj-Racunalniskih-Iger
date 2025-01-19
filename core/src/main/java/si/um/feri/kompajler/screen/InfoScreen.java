@@ -2,11 +2,8 @@ package main.java.si.um.feri.kompajler.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
@@ -17,13 +14,16 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.graphics.Color;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import main.java.si.um.feri.kompajler.DigitalniDvojcek;
+import main.java.si.um.feri.kompajler.assets.AssetPaths;
 import main.java.si.um.feri.kompajler.config.GameConfig;
 import main.java.si.um.feri.kompajler.assets.AssetDescriptors;
+import main.java.si.um.feri.kompajler.utils.ApiHelper;
 
 public class InfoScreen implements Screen {
     private final DigitalniDvojcek game;
@@ -36,6 +36,9 @@ public class InfoScreen implements Screen {
     MapScreen mapFromBefore;
 
     private Window window;
+
+    String jsonResponse = null;
+    JSONArray menus = null;
 
     public InfoScreen(DigitalniDvojcek game, JSONObject restaurant, MapScreen mapFromBefore) {
         this.game = game;
@@ -60,6 +63,7 @@ public class InfoScreen implements Screen {
 
         // Prepare restaurant data
         String name = restaurant.optString("name", "Unknown");
+        String id = restaurant.optString("id", "Unknown");
         String address = restaurant.optString("address", "No address available");
         float averageRating = restaurant.optFloat("averageRating", 0);
 
@@ -67,7 +71,8 @@ public class InfoScreen implements Screen {
         JSONArray workingHours = restaurant.optJSONArray("workingHours");
         JSONArray tags = restaurant.optJSONArray("tags");
 
-        StringBuilder workingHoursText = new StringBuilder("Working Hours:\n");
+        StringBuilder workingHoursTextOnly = new StringBuilder("Working Hours:\n");
+        StringBuilder workingHoursText = new StringBuilder("");
         if (workingHours != null) {
             for (int i = 0; i < workingHours.length(); i++) {
                 JSONObject day = workingHours.getJSONObject(i);
@@ -80,18 +85,58 @@ public class InfoScreen implements Screen {
         StringBuilder tagsText = new StringBuilder("Tags:\n");
         if (tags != null) {
             for (int i = 0; i < tags.length(); i++) {
-                tagsText.append(tags.getJSONObject(i).optString("name")).append("\n");
+                tagsText.append(tags.getJSONObject(i).optString("name"));
+                if (i < tags.length() - 1) {
+                    tagsText.append(", ");
+                }
             }
         }
 
-        // Create content table for restaurant info
+        Label.LabelStyle labelStyle = new Label.LabelStyle(game.assetManager.get(AssetDescriptors.SS_TEXT), Color.WHITE);
+        labelStyle.font.getData().setScale(0.4f);
+
+        // Fetch menu data from the API
+        jsonResponse = ApiHelper.makeGetRequest(AssetPaths.URL + "menus");
+        if (jsonResponse != null) {
+            menus = new JSONArray(jsonResponse);
+        } else {
+            System.out.println("Failed to fetch data from the API.");
+        }
+
+        StringBuilder menuDetails = new StringBuilder("Menus:\n");
+        menus = new JSONArray(jsonResponse);
+
+        for (int i = 0; i < menus.length(); i++) {
+            JSONObject menu = menus.getJSONObject(i);
+            if (menu.optString("restaurant").equals(id)) {
+                String dish = menu.optString("dish");
+                JSONArray sideDishes = menu.optJSONArray("sideDishes");
+                StringBuilder sides = new StringBuilder();
+                for (int j = 0; j < sideDishes.length(); j++) {
+                    sides.append(sideDishes.getString(j));
+                    if (j < sideDishes.length() - 1) sides.append(", ");
+                }
+                menuDetails.append(dish).append(" - Side Dishes: ").append(sides).append("\n");
+            }
+        }
+
+        // Display menu details in a UI Label inside the `InfoScreen`
+        Label menuLabel = new Label(menuDetails.toString(), skin);
+        menuLabel.setColor(Color.WHITE);
+        window = new Window("Restaurant Menus", skin);
+        window.add(menuLabel).pad(10).expand().fill();
+        window.pack();
+        window.setPosition((Gdx.graphics.getWidth() - window.getWidth()) / 2, (Gdx.graphics.getHeight() - window.getHeight()) / 2);
+
         Table table = new Table();
         table.defaults().pad(5 * camera.zoom);
-        table.add(new Label(name, skin)).row();
-        table.add(new Label("Address: " + address, skin)).row();
-        table.add(new Label("Rating: " + averageRating, skin)).row();
-        table.add(new Label(workingHoursText.toString(), skin)).row();
-        table.add(new Label(tagsText.toString(), skin)).row();
+        table.add(new Label(name, labelStyle)).left().row();
+        table.add(new Label("Address: " + address, labelStyle)).left().row();
+        table.add(new Label("Rating: " + averageRating, labelStyle)).left().row();
+        table.add(new Label(workingHoursTextOnly.toString(), labelStyle)).row();
+        table.add(new Label(workingHoursText.toString(), labelStyle)).row();
+        table.add(new Label(tagsText.toString(), labelStyle)).left().row();
+        table.add(new Label(menuDetails.toString(), labelStyle)).row();
 
         // Set up scrollable window
         ScrollPane scrollPane = new ScrollPane(table, skin);

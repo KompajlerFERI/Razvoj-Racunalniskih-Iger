@@ -34,6 +34,7 @@ import org.json.JSONObject;
 
 import main.java.si.um.feri.kompajler.DigitalniDvojcek;
 import main.java.si.um.feri.kompajler.assets.AssetDescriptors;
+import main.java.si.um.feri.kompajler.assets.AssetPaths;
 import main.java.si.um.feri.kompajler.utils.ApiHelper;
 import main.java.si.um.feri.kompajler.utils.Constants;
 import main.java.si.um.feri.kompajler.utils.Geolocation;
@@ -55,7 +56,6 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     private TiledMap tiledMap;
     private TiledMapRenderer tiledMapRenderer;
     private OrthographicCamera camera;
-    private OrthographicCamera getCamera;
     private SpriteBatch batch;
     private Viewport viewport;
     private AssetManager assetManager;
@@ -99,6 +99,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             camera.zoom = 2f;
         } else {
             this.camera = mapFromBefore.camera;
+            camera.update();
             this.viewport = mapFromBefore.viewport;
             this.batch = mapFromBefore.batch;
             this.shapeRenderer = mapFromBefore.shapeRenderer;
@@ -164,7 +165,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
         try {
-            jsonResponse = ApiHelper.makeGetRequest(ApiHelper.url + "restaurants");
+            jsonResponse = ApiHelper.makeGetRequest(AssetPaths.URL + "restaurants");
             if (jsonResponse != null) {
                 restaurants = new JSONArray(jsonResponse);
             } else {

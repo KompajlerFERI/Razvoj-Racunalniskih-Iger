@@ -10,6 +10,8 @@ public class AssetDescriptors {
         new AssetDescriptor<BitmapFont>(AssetPaths.UI_FONT_TITLE, BitmapFont.class);
     public static final AssetDescriptor<BitmapFont> UI_FONT_LABEL =
         new AssetDescriptor<BitmapFont>(AssetPaths.UI_FONT_LABEL, BitmapFont.class);
+    public static final AssetDescriptor<BitmapFont> SS_TEXT =
+        new AssetDescriptor<BitmapFont>(AssetPaths.SS_TEXT, BitmapFont.class);
     public static final AssetDescriptor<Skin> UI_SKIN =
         new AssetDescriptor<Skin>(AssetPaths.UI_SKIN, Skin.class);
     private AssetDescriptors() {

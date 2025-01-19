@@ -9,7 +9,6 @@ import java.net.http.HttpResponse;
 import java.io.IOException;
 
 public class ApiHelper {
-    public static String url = "http://localhost:3001/";
 
     public static String makeGetRequest(String url) {
         HttpClient client = HttpClient.newHttpClient();
