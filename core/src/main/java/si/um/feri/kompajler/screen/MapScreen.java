@@ -227,7 +227,6 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             }
         }
 
-        // Create a table for layout
         Table table = new Table();
         table.defaults().pad(5 * camera.zoom);
         table.add(new Label(name, skin)).row();
@@ -237,6 +236,10 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         table.add(new Label(tagsText.toString(), skin)).row();
 
         ScrollPane scrollPane = new ScrollPane(table, skin);
+        scrollPane.setFadeScrollBars(false); // Disable fade effect for scroll bars
+        scrollPane.setScrollingDisabled(false, false); // Allow scrolling both horizontally and vertically if needed
+        scrollPane.setScrollbarsVisible(true);
+
         float newX = position.x - width / 2;
         float newY = position.y - height - 5f;
         window = new Window("Restaurant Info", skin);
@@ -331,17 +334,35 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
     @Override
     public boolean touchDown(float x, float y, int pointer, int button) {
+        // If no window is open, proceed with normal touch handling
         if (window == null) {
             touchPosition.set(x, y, 0);
             camera.unproject(touchPosition);
+        } else {
+            // Convert the touch position to world coordinates
+            float[] worldCoords = convertToWorld(x, y, camera);
+            float dragX = worldCoords[0];
+            float dragY = worldCoords[1];
+
+            // Convert window's position to screen coordinates (in case it's in world space)
+            camera.project(touchPosition.set(window.getX(), window.getY(), 0));
+            float windowX = touchPosition.x;
+            float windowY = touchPosition.y;
+
+            // Check if the touch is inside the window bounds in screen space
+            if (x >= windowX && x <= windowX + window.getWidth() && y >= windowY && y <= windowY + window.getHeight()) {
+                // Touch is inside the window, return true to consume the event
+                return true;
+            }
         }
-        return false;
+
+        return false;  // Allow other touchDown events to be processed
     }
+
 
     // RETURNS IN WORLD UNITS
     @Override
     public boolean tap(float x, float y, int count, int button) {
-        // Convert screen coordinates to world coordinates
         float[] worldCoords = convertToWorld(x, y, camera);
         float tapX = worldCoords[0];
         float tapY = worldCoords[1];
@@ -378,12 +399,17 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             }
         }
 
-        // If we found the closest restaurant, select it
         if (closestRestaurant != null) {
             selectedRestaurant = closestRestaurant;
             selectedRestaurantPosition = closestPinPosition;
         }
-        else {
+        else if (
+            window != null
+            && (tapX < window.getX()
+            || tapX > window.getX() + window.getWidth()
+            || tapY < window.getY()
+            || tapY > window.getY() + window.getHeight())
+        ) {
             selectedRestaurant = null;
             selectedRestaurantPosition = null;
         }
