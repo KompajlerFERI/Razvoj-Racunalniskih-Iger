@@ -1,4 +1,4 @@
-package si.um.feri.kompajler.screen;
+package main.java.si.um.feri.kompajler.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -18,6 +19,8 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+import main.java.si.um.feri.kompajler.DigitalniDvojcek;
+import main.java.si.um.feri.kompajler.config.GameConfig;
 import si.um.feri.kompajler.DigitalniDvojcek;
 import si.um.feri.kompajler.assets.AssetDescriptors;
 import si.um.feri.kompajler.config.GameConfig;
@@ -59,7 +62,7 @@ public class GameplayScreen implements Screen {
 
     @Override
     public void show() {
-        gameplayViewport = new FitViewport(GameConfig.WIDTH, GameConfig.HEIGHT);
+        gameplayViewport = new FitViewport(GameConfig.getWidth(), GameConfig.getHeight());
         stage = new Stage(gameplayViewport, game.getBatch());
 
         tiledMap = new TmxMapLoader().load("map/projekt-map.tmx");
@@ -135,7 +138,7 @@ public class GameplayScreen implements Screen {
         shapeRenderer.setProjectionMatrix(gameplayCamera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(0, 0, 0, 1);
-        shapeRenderer.rect(0, gameplayCamera.viewportHeight - 100, GameConfig.WIDTH * 4, 100);
+        shapeRenderer.rect(0, gameplayCamera.viewportHeight - 100, GameConfig.getWidth() * 4, 100);
         shapeRenderer.end();
 
         game.getBatch().setProjectionMatrix(gameplayCamera.combined);
