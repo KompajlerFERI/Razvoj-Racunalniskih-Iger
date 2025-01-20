@@ -9,8 +9,11 @@ public class GameConfig {
     private static float HUD_WIDTH = 80;
     private static float HUD_HEIGHT = 80;
 
-    private static float PLAYER_WIDTH = 30;
-    private static float PLAYER_HEIGHT = 30;
+    public static final float PLAYER_WIDTH = 30;
+    public static final float PLAYER_HEIGHT = 30;
+    public static final float PLAYER_SPEED = 2;
+
+    public static final float BULLET_SPEED = 700;
 
     private GameConfig() {
     }

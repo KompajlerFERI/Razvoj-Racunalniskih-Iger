@@ -19,6 +19,7 @@ import main.java.si.um.feri.kompajler.assets.AssetDescriptors;
 import main.java.si.um.feri.kompajler.screen.GameplayScreen;
 import main.java.si.um.feri.kompajler.screen.MapScreen;
 import main.java.si.um.feri.kompajler.utils.Constants;
+import si.um.feri.kompajler.screen.PreGameplayScreen;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class DigitalniDvojcek extends Game {
@@ -27,6 +28,7 @@ public class DigitalniDvojcek extends Game {
     public AssetManager assetManager;
 
     // Dev branch :D
+
 
     @Override
     public void create() {
@@ -43,6 +45,16 @@ public class DigitalniDvojcek extends Game {
         MapScreen mapScreen = new MapScreen(this, null);
         mapScreen.fromBefore = false;
         setScreen(mapScreen); //to je temporary pol naj bo nastavleno na main screen al kaj pac bo
+        // setScreen(new PreGameplayScreen(this)); //to je temporary pol naj bo nastavleno na main screen al kaj pac bo
+
+
+        // GAME INFO
+        System.out.println("\n\n|-----------------------------------------------|");
+        System.out.println("|                  GAME CONTROLS                |");
+        System.out.println("|-----------------------------------------------|");
+        System.out.println("|  Green player moves with WASD, shoots with Q  |");
+        System.out.println("|Red player moves with ARROW KEYS, shoots with M|");
+        System.out.println("|-----------------------------------------------|");
     }
 
 //    @Override
@@ -56,6 +68,10 @@ public class DigitalniDvojcek extends Game {
 //    }
     public SpriteBatch getBatch() {
         return batch;
+    }
+
+    public AssetManager getAssetManager() {
+        return assetManager;
     }
 
     @Override
