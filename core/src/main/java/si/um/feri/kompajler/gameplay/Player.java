@@ -1,4 +1,4 @@
-package main.java.si.um.feri.kompajler.gameplay;
+package si.um.feri.kompajler.gameplay;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;

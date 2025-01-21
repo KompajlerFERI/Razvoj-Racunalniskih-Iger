@@ -1,6 +1,6 @@
-package main.java.si.um.feri.kompajler.utils;
+package si.um.feri.kompajler.utils;
 
-import static main.java.si.um.feri.kompajler.utils.MapRasterTiles.fetchTile;
+import static si.um.feri.kompajler.utils.MapRasterTiles.fetchTile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;

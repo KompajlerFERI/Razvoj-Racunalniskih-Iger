@@ -1,4 +1,4 @@
-package main.java.si.um.feri.kompajler.screen;
+package si.um.feri.kompajler.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -19,11 +19,11 @@ import com.badlogic.gdx.graphics.Color;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import main.java.si.um.feri.kompajler.DigitalniDvojcek;
-import main.java.si.um.feri.kompajler.assets.AssetPaths;
-import main.java.si.um.feri.kompajler.config.GameConfig;
-import main.java.si.um.feri.kompajler.assets.AssetDescriptors;
-import main.java.si.um.feri.kompajler.utils.ApiHelper;
+import si.um.feri.kompajler.DigitalniDvojcek;
+import si.um.feri.kompajler.assets.AssetPaths;
+import si.um.feri.kompajler.config.GameConfig;
+import si.um.feri.kompajler.assets.AssetDescriptors;
+import si.um.feri.kompajler.utils.ApiHelper;
 
 public class InfoScreen implements Screen {
     private final DigitalniDvojcek game;

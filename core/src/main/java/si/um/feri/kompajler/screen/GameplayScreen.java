@@ -1,4 +1,4 @@
-package main.java.si.um.feri.kompajler.screen;
+package si.um.feri.kompajler.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -19,8 +19,8 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-import main.java.si.um.feri.kompajler.DigitalniDvojcek;
-import main.java.si.um.feri.kompajler.config.GameConfig;
+import si.um.feri.kompajler.DigitalniDvojcek;
+import si.um.feri.kompajler.config.GameConfig;
 import si.um.feri.kompajler.DigitalniDvojcek;
 import si.um.feri.kompajler.assets.AssetDescriptors;
 import si.um.feri.kompajler.config.GameConfig;

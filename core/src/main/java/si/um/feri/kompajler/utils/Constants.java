@@ -1,4 +1,4 @@
-package main.java.si.um.feri.kompajler.utils;
+package si.um.feri.kompajler.utils;
 
 import com.badlogic.gdx.Gdx;
 

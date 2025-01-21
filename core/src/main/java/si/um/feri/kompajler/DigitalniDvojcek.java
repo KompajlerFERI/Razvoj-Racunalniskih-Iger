@@ -1,4 +1,4 @@
-package main.java.si.um.feri.kompajler;
+package si.um.feri.kompajler;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Game;
@@ -15,10 +15,10 @@ import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.Map;
 
-import main.java.si.um.feri.kompajler.assets.AssetDescriptors;
-import main.java.si.um.feri.kompajler.screen.GameplayScreen;
-import main.java.si.um.feri.kompajler.screen.MapScreen;
-import main.java.si.um.feri.kompajler.utils.Constants;
+import si.um.feri.kompajler.assets.AssetDescriptors;
+import si.um.feri.kompajler.screen.GameplayScreen;
+import si.um.feri.kompajler.screen.MapScreen;
+import si.um.feri.kompajler.utils.Constants;
 import si.um.feri.kompajler.screen.PreGameplayScreen;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */

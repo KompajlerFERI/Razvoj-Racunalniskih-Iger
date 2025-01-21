@@ -1,4 +1,4 @@
-package main.java.si.um.feri.kompajler.config;
+package si.um.feri.kompajler.config;
 
 public class GameConfig {
     private static final float WORLD_UNIT = 10;
@@ -109,21 +109,5 @@ public class GameConfig {
     // (DIVIDE BY 10)
     public static void setHudHeight(float hudHeight) {
         HUD_HEIGHT = hudHeight;
-    }
-
-    // SET IN WORLD UNITS AND NOT PIXELS
-    // FOR EXAMPLE, IF YOU WANT TO SET SOMETHING
-    // TO 100 PIXELS, YOU NEED TO SET IT TO 10
-    // (DIVIDE BY 10)
-    public static void setPlayerWidth(float playerWidth) {
-        PLAYER_WIDTH = playerWidth;
-    }
-
-    // SET IN WORLD UNITS AND NOT PIXELS
-    // FOR EXAMPLE, IF YOU WANT TO SET SOMETHING
-    // TO 100 PIXELS, YOU NEED TO SET IT TO 10
-    // (DIVIDE BY 10)
-    public static void setPlayerHeight(float playerHeight) {
-        PLAYER_HEIGHT = playerHeight;
     }
 }

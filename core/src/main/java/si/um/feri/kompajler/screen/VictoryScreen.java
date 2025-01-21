@@ -39,7 +39,7 @@ public class VictoryScreen implements Screen {
     public VictoryScreen(DigitalniDvojcek game, int winner) {
         this.game = game;
         this.assetManager = game.getAssetManager();
-        this.skin = assetManager.get(AssetDescriptors.UI_SKIN);
+        this.skin = assetManager.get(AssetDescriptors.UI_SKIN_NEON);
         this.winner = winner;
     }
 

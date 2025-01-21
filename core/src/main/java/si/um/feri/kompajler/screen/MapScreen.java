@@ -1,4 +1,4 @@
-package main.java.si.um.feri.kompajler.screen;
+package si.um.feri.kompajler.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -32,14 +32,14 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import main.java.si.um.feri.kompajler.DigitalniDvojcek;
-import main.java.si.um.feri.kompajler.assets.AssetDescriptors;
-import main.java.si.um.feri.kompajler.assets.AssetPaths;
-import main.java.si.um.feri.kompajler.utils.ApiHelper;
-import main.java.si.um.feri.kompajler.utils.Constants;
-import main.java.si.um.feri.kompajler.utils.Geolocation;
-import main.java.si.um.feri.kompajler.utils.MapRasterTiles;
-import main.java.si.um.feri.kompajler.utils.ZoomXY;
+import si.um.feri.kompajler.DigitalniDvojcek;
+import si.um.feri.kompajler.assets.AssetDescriptors;
+import si.um.feri.kompajler.assets.AssetPaths;
+import si.um.feri.kompajler.utils.ApiHelper;
+import si.um.feri.kompajler.utils.Constants;
+import si.um.feri.kompajler.utils.Geolocation;
+import si.um.feri.kompajler.utils.MapRasterTiles;
+import si.um.feri.kompajler.utils.ZoomXY;
 
 import java.io.IOException;
 

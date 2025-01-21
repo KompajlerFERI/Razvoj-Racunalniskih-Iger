@@ -39,7 +39,7 @@ public class PreGameplayScreen implements Screen {
     public PreGameplayScreen(DigitalniDvojcek game) {
         this.game = game;
         this.assetManager = game.getAssetManager();
-        this.skin = assetManager.get(AssetDescriptors.UI_SKIN);
+        this.skin = assetManager.get(AssetDescriptors.UI_SKIN_NEON);
     }
 
     @Override

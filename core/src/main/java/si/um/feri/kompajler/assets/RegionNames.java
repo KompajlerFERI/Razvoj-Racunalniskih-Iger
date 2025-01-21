@@ -1,4 +1,4 @@
-package main.java.si.um.feri.kompajler.assets;
+package si.um.feri.kompajler.assets;
 
 public class RegionNames {
     public static final String UI_FONT_TITLE = "title";
