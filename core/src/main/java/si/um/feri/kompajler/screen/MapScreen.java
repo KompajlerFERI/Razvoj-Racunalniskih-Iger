@@ -2,6 +2,7 @@ package si.um.feri.kompajler.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
@@ -22,9 +23,14 @@ import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -79,10 +85,20 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     private JSONObject selectedRestaurant = null;
     private Vector2 selectedRestaurantPosition = null;
 
+    boolean hasMeatTag = false,
+        hasMixedTag = false,
+        hasVeganTag = false,
+        hasSaladTag = false,
+        hasSeaFoodTag = false,
+        hasPizzaTag = false,
+        hasFastFoodTag = false,
+        hasCeliacFriendlyFoodTag = false,
+        allTagsFalse = true;
+
+
     public MapScreen(DigitalniDvojcek game, MapScreen mapFromBefore) {
         this.game = game;
         this.mapFromBefore = mapFromBefore;
-
     }
 
     @Override
@@ -97,7 +113,8 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             camera.setToOrtho(false, Constants.MAP_WIDTH, Constants.MAP_HEIGHT);
             camera.position.set(Constants.MAP_WIDTH / 2f, Constants.MAP_HEIGHT / 2f, 0);
             camera.zoom = 2f;
-        } else {
+        }
+        else {
             this.camera = mapFromBefore.camera;
             camera.update();
             this.viewport = mapFromBefore.viewport;
@@ -128,9 +145,6 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         Gdx.input.setInputProcessor(stage);
         window = null;
         infoScreen = new InfoScreen(game, selectedRestaurant, this);
-
-        GestureDetector gestureDetector = new GestureDetector(this);
-        Gdx.input.setInputProcessor(gestureDetector);
 
         touchPosition = new Vector3();
         // vem da naj bi z asset managerjem delal
@@ -175,6 +189,73 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+
+
+        window = new Window("Filter", skin);
+        window.setSize(200, 200);
+        window.setPosition(0, 0);
+        window.setMovable(false);
+        window.setResizable(false);
+
+        // Create a table to hold the elements
+        Table table = new Table();
+        table.top().left();
+        table.pad(10);
+        table.setFillParent(true);
+
+        // Create the first label and button
+        Label meatLabel = new Label("Setting 1:", skin);
+        TextButton meatButton = new TextButton("OFF", skin);
+        meatButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                String currentText = meatButton.getText().toString();
+                meatButton.setText(hasMeatTag ? "ON" : "OFF");
+            }
+        });
+
+        Label mixedLabel = new Label("Setting 2:", skin);
+        TextButton textButton2 = new TextButton("OFF", skin);
+        textButton2.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                String currentText = textButton2.getText().toString();
+                textButton2.setText(hasMixedTag ? "ON" : "OFF");
+            }
+        });
+
+        Label veganLabel = new Label("Setting 3:", skin);
+        TextButton textButton3 = new TextButton("OFF", skin);
+        textButton3.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                String currentText = textButton3.getText().toString();
+                textButton3.setText(hasVeganTag ? "ON" : "OFF");
+            }
+        });
+
+        table.row().left();
+        table.add(meatLabel).padRight(10);
+        table.add(meatButton);
+
+        table.row().left().padTop(10);
+        table.add(mixedLabel).padRight(10);
+        table.add(textButton2);
+
+        table.row().left().padTop(10);
+        table.add(veganLabel).padRight(10);
+        table.add(textButton3);
+
+        stage.addActor(table);
+
+
+        GestureDetector gestureDetector = new GestureDetector(this);
+        InputMultiplexer inputMultiplexer = new InputMultiplexer();
+        inputMultiplexer.addProcessor(stage);
+        inputMultiplexer.addProcessor(gestureDetector);
+        Gdx.input.setInputProcessor(inputMultiplexer);
+        Gdx.input.setInputProcessor(stage);
     }
 
     @Override
@@ -192,8 +273,8 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             double latitude = coordinates.getDouble(1);  // Index 1 for latitude
             double longitude = coordinates.getDouble(0); // Index 0 for longitude
 
-            boolean hasVeganTag = false;
-            boolean hasPizzaTag = false;
+            hasVeganTag = false;
+            hasPizzaTag = false;
             JSONArray tags = restaurant.getJSONArray("tags");
             for (int j = 0; j < tags.length(); j++) {
                 String tagName = tags.getJSONObject(j).getString("name");
@@ -206,7 +287,19 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             }
 
             locationPlaceholder = MapRasterTiles.getPixelPosition(latitude, longitude, beginTile.x, beginTile.y);
-            drawMarkers(camera, batch, locationPlaceholder, hasVeganTag, hasPizzaTag);
+            if (
+                allTagsFalse
+                || hasMeatTag
+                || hasMixedTag
+                || hasVeganTag
+                || hasSaladTag
+                || hasSeaFoodTag
+                || hasPizzaTag
+                || hasFastFoodTag
+                || hasCeliacFriendlyFoodTag
+            ) {
+                drawMarkers(camera, batch, locationPlaceholder, hasVeganTag, hasPizzaTag);
+            }
 
             if (selectedRestaurant != null) {
                 // drawPopUpWindow(selectedRestaurant, selectedRestaurantPosition);
@@ -222,88 +315,10 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         }
     }
 
-    /*
-    private void drawPopUpWindow(JSONObject restaurant, Vector2 position) {
-        float width = viewport.getScreenWidth() * camera.zoom * 0.8f;
-        float height = viewport.getScreenHeight() * camera.zoom * 0.5f;
-
-        String name = restaurant.optString("name", "Unknown");
-        String address = restaurant.optString("address", "No address available");
-        float averageRating = restaurant.optFloat("averageRating", 0);
-
-        JSONArray workingHours = restaurant.optJSONArray("workingHours");
-        JSONArray tags = restaurant.optJSONArray("tags");
-
-        StringBuilder workingHoursText = new StringBuilder("Working Hours:\n");
-        if (workingHours != null) {
-            for (int i = 0; i < workingHours.length(); i++) {
-                JSONObject day = workingHours.getJSONObject(i);
-                workingHoursText.append(day.optString("day")).append(": ")
-                    .append(day.optString("open")).append(" - ")
-                    .append(day.optString("close")).append("\n");
-            }
-        }
-
-        StringBuilder tagsText = new StringBuilder("Tags:\n");
-        if (tags != null) {
-            for (int i = 0; i < tags.length(); i++) {
-                tagsText.append(tags.getJSONObject(i).optString("name")).append("\n");
-            }
-        }
-
-        Table table = new Table();
-        table.defaults().pad(5 * camera.zoom);
-        table.add(new Label(name, skin)).row();
-        table.add(new Label("Address: " + address, skin)).row();
-        table.add(new Label("Rating: " + averageRating, skin)).row();
-        table.add(new Label(workingHoursText.toString(), skin)).row();
-        table.add(new Label(tagsText.toString(), skin)).row();
-
-        ScrollPane scrollPane = new ScrollPane(table, skin);
-        scrollPane.setFadeScrollBars(false); // Disable fade effect for scroll bars
-        scrollPane.setScrollingDisabled(false, false); // Allow scrolling both horizontally and vertically if needed
-        scrollPane.setScrollbarsVisible(true);
-
-        float newX = position.x - width / 2;
-        float newY = position.y - height - 5f;
-        window = new Window("Restaurant Info", skin);
-        window.setSize(width, height);
-        window.setPosition(newX, newY);
-        window.add(scrollPane).fill().expand();
-
-        if (newX < 0) {
-            camera.position.set(GameConfig.getWidth() / 2 * camera.zoom, position.y + 100f, 0);
-            window.setPosition(GameConfig.getHeight() / 2 * camera.zoom - width / 2, newY);
-        }
-        else if (newX > GameConfig.getWidth()) {
-            camera.position.set(position.x - width, position.y - 100f, 0);
-            window.setPosition(position.x - width / 2, newY);
-        }
-        else {
-            camera.position.set(position.x, position.y - 100f, 0);
-        }
-        if (newY < 0) {
-            camera.position.set(GameConfig.getHeight() / 2 * camera.zoom, position.y + 100f, 0);
-            window.setPosition(newX, position.y + 100f - height / 2);
-        }
-        else if (newY > GameConfig.getHeight()) {
-            camera.position.set(camera.position.x, position.y - 100f, 0);
-            window.setPosition(newX, position.y - 100f - height / 2);
-        }
-        else {
-            camera.position.set(camera.position.x, position.y - 100f, 0);
-        }
-
-        camera.zoom = 0.5f;
-        camera.update();
-        stage.clear();
-        stage.addActor(window);
-    }
-    */
-
     @Override
     public void resize(int width, int height) {
-        viewport.update(width, height, true);
+        viewport.update(width, height);
+        stage.getViewport().update(width, height, true);
     }
 
     @Override
@@ -344,6 +359,16 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         float pinHeight = camZoom * texture.getHeight() / 2 * 0.8f;
         spriteBatch.draw(texture, marker.x - pinWidth / 2, marker.y, pinWidth, pinHeight);
         spriteBatch.end();
+    }
+
+    private void createHud() {
+        // make a hud one button on the right side
+        // and when its clicked it displays an on screen window
+        // that has toggle buttons for each tag
+        // and a close button
+
+        // Create a window with a title
+
     }
 
     private void drawMarkers(Vector2 marker) {

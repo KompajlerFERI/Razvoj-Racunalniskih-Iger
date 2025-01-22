@@ -46,8 +46,8 @@ public class DigitalniDvojcek extends Game {
         Vector2 position = new Vector2(Constants.MAP_WIDTH / 2f, Constants.MAP_HEIGHT / 2f);
         MapScreen mapScreen = new MapScreen(this, null);
         mapScreen.fromBefore = false;
-        /*setScreen(mapScreen); */
-        setScreen(new PreGameplayScreen(this));
+        setScreen(mapScreen);
+        //setScreen(new PreGameplayScreen(this));
 
         // GAME INFO
         System.out.println("\n\n|-----------------------------------------------|");
