@@ -2,18 +2,26 @@ package si.um.feri.kompajler.config;
 
 public class GameConfig {
     private static final float WORLD_UNIT = 10;
+    public static final float WORLD_UNIT_PIXELS = 32;
 
-    private static float WIDTH = 80;
-    private static float HEIGHT = 80;
+    public static final float INITIAL_WINDOW_HEIGHT = 544;
+    public static final float INITIAL_WINDOW_WIDTH = 1024;
 
-    private static float HUD_WIDTH = 80;
-    private static float HUD_HEIGHT = 80;
+    private static final float WIDTH = 80;
+    private static final float HEIGHT = 80;
+
+    public static final float HUD_WIDTH = INITIAL_WINDOW_WIDTH;
+    public static final float HUD_HEIGHT = INITIAL_WINDOW_HEIGHT;
+
+    public static final float WORLD_UNITS_WIDTH = 32f;
+    public static final float WORLD_UNITS_HEIGHT = 18f;
+    public static final float WORLD_UNITS_LEFT_OFFSET = 7f;
 
     public static final float PLAYER_WIDTH = 30;
     public static final float PLAYER_HEIGHT = 30;
-    public static final float PLAYER_SPEED = 2;
+    public static final float PLAYER_SPEED = 3;
 
-    public static final float BULLET_SPEED = 700;
+    public static final float BULLET_SPEED = 7;
 
     private GameConfig() {
     }
@@ -83,7 +91,7 @@ public class GameConfig {
     // FOR EXAMPLE, IF YOU WANT TO SET SOMETHING
     // TO 100 PIXELS, YOU NEED TO SET IT TO 10
     // (DIVIDE BY 10)
-    public static void setWidth(float width) {
+    /*public static void setWidth(float width) {
         WIDTH = width;
     }
 
@@ -109,5 +117,5 @@ public class GameConfig {
     // (DIVIDE BY 10)
     public static void setHudHeight(float hudHeight) {
         HUD_HEIGHT = hudHeight;
-    }
+    }*/
 }

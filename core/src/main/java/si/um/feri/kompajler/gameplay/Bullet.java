@@ -22,8 +22,8 @@ public class Bullet {
 
     public Bullet(float x, float y, float velocityX, float velocityY, TextureAtlas atlas, int playerId) {
         this.textureRegion = atlas.findRegion(RegionNames.BULLET); // Assuming "bullet" is the name of the region in the atlas
-        float width = textureRegion.getRegionWidth() * 1.5f;
-        float height = textureRegion.getRegionHeight() * 1.5f;
+        float width = textureRegion.getRegionWidth() / GameConfig.WORLD_UNIT_PIXELS;
+        float height = textureRegion.getRegionHeight() / GameConfig.WORLD_UNIT_PIXELS;
         this.speed = GameConfig.BULLET_SPEED;
         this.bounds = new Rectangle(x, y, width, height);
         this.velocity = new Vector2(velocityX, velocityY).nor().scl(speed);

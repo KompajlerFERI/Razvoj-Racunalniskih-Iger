@@ -5,6 +5,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -14,7 +15,12 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -33,14 +39,13 @@ import si.um.feri.kompajler.gameplay.PlayerScore;
 
 public class GameplayScreen implements Screen {
     private final DigitalniDvojcek game;
-    private Viewport gameplayViewport;
-    private Viewport hudViewport;
-    private Stage stage;
     private OrthographicCamera gameplayCamera;
+    private Viewport gameplayViewport;
     private OrthographicCamera hudCamera;
+    private Viewport hudViewport;
+    private Stage hudStage;
     private ShapeRenderer shapeRenderer;
     private BitmapFont font;
-    private GlyphLayout layout;
 
     // Tiled map
     private TiledMap tiledMap;
@@ -49,8 +54,20 @@ public class GameplayScreen implements Screen {
     private final AssetManager assetManager;
 
     private TextureAtlas gameplayAtlas;
+
+    private Texture background;
+
+    private BitmapFont playerNameFont;
     private Player player1;
     private Player player2;
+
+    private String player1Username = "Taubek";
+    private String player2Username = "Sluzek";
+    private Label player1UsernameLabel;
+    private Label player2UsernameLabel;
+
+    private Label player1ScoreLabel;
+    private Label player2ScoreLabel;
 
     private MapBoundsHandlerPlayer mapBoundsHandlerPlayer;
     private MapBoundsHandlerBullet mapBoundsHandlerBullet;
@@ -62,32 +79,19 @@ public class GameplayScreen implements Screen {
 
     @Override
     public void show() {
-        gameplayViewport = new FitViewport(GameConfig.getWidth(), GameConfig.getHeight());
-        stage = new Stage(gameplayViewport, game.getBatch());
+        // G A M E P L A Y
+        gameplayCamera = new OrthographicCamera();
+        gameplayViewport = new FitViewport(GameConfig.WORLD_UNITS_WIDTH, GameConfig.WORLD_UNITS_HEIGHT, gameplayCamera);
 
-        tiledMap = new TmxMapLoader().load("map/projekt-map.tmx");
-        TiledMapTileLayer layer = (TiledMapTileLayer) tiledMap.getLayers().get("Background");
-        float mapWidth = layer.getWidth() * layer.getTileWidth();
-        float mapHeight = layer.getHeight() * layer.getTileHeight();
+        tiledMap = new TmxMapLoader().load("map/tilemap.tmx");
 
         TiledMapTileLayer borders = (TiledMapTileLayer) tiledMap.getLayers().get("Borders");
-        mapBoundsHandlerPlayer = new MapBoundsHandlerPlayer(borders);
-        mapBoundsHandlerBullet = new MapBoundsHandlerBullet(borders);
+        float tileWidthInWorldUnits = borders.getTileWidth() / GameConfig.WORLD_UNIT_PIXELS;
+        float tileHeightInWorldUnits = borders.getTileHeight() / GameConfig.WORLD_UNIT_PIXELS;
+        mapBoundsHandlerPlayer = new MapBoundsHandlerPlayer(borders, tileWidthInWorldUnits, tileHeightInWorldUnits);
+        mapBoundsHandlerBullet = new MapBoundsHandlerBullet(borders, tileWidthInWorldUnits, tileHeightInWorldUnits);
 
-        gameplayViewport = new FitViewport(mapWidth, mapHeight);
-        stage = new Stage(gameplayViewport, game.getBatch());
-
-        gameplayCamera = new OrthographicCamera();
-        gameplayCamera.setToOrtho(false, mapWidth, mapHeight + 100);
-        gameplayCamera.update();
-
-        tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
-        tiledMapRenderer.setView(gameplayCamera);
-
-        shapeRenderer = new ShapeRenderer();
-        font = new BitmapFont();
-        font.getData().setScale(5); // Scale the font size by 10
-        layout = new GlyphLayout();
+        tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap, 1 / GameConfig.WORLD_UNIT_PIXELS);
 
         assetManager.load(AssetDescriptors.GAMEPLAY_ATLAS);
         assetManager.load(AssetDescriptors.SHOOT_WAV);
@@ -95,6 +99,8 @@ public class GameplayScreen implements Screen {
         assetManager.finishLoading();
 
         gameplayAtlas = assetManager.get(AssetDescriptors.GAMEPLAY_ATLAS);
+        background = assetManager.get(AssetDescriptors.GAMEPLAY_BACKGROUND);
+        playerNameFont = assetManager.get(AssetDescriptors.PLAYER_NAME_FONT);
 
         player1 = new Player(gameplayAtlas, assetManager, 0);
         player2 = new Player(gameplayAtlas, assetManager, 1);
@@ -102,12 +108,44 @@ public class GameplayScreen implements Screen {
         GameManager.getInstance().players.add(player2);
 
         GameManager.getInstance().playerScores.add(new PlayerScore(0, 0), new PlayerScore(1, 0));
+
+        // H U D
+        hudCamera = new OrthographicCamera();
+        hudViewport = new FitViewport(GameConfig.HUD_WIDTH, GameConfig.HUD_HEIGHT, hudCamera);
+
+        hudStage = new Stage(hudViewport, game.getBatch());
+
+        Image backgroundImage = new Image(background);
+
+        Label.LabelStyle player1LabelStyle = new Label.LabelStyle(playerNameFont, new Color(0x00FA00FF));
+        Label.LabelStyle player2LabelStyle = new Label.LabelStyle(playerNameFont, new Color(0xAB3227FF));
+        Label.LabelStyle scoreLabelStyle = new Label.LabelStyle(playerNameFont, new Color(Color.WHITE));
+
+        player1UsernameLabel = new Label(player1Username, player1LabelStyle);
+        player2UsernameLabel = new Label(player2Username, player2LabelStyle);
+        player1ScoreLabel = new Label("SCORE:0", scoreLabelStyle);
+        player2ScoreLabel = new Label("SCORE:0", scoreLabelStyle);
+
+        player1UsernameLabel.setPosition(112 - player1UsernameLabel.getWidth() / 2, 452 - player1UsernameLabel.getHeight() / 2);
+        player2UsernameLabel.setPosition(912 - player2UsernameLabel.getWidth() / 2, 452 - player2UsernameLabel.getHeight() / 2);
+        player1ScoreLabel.setPosition(112 - player1ScoreLabel.getWidth() / 2, 80 - player1ScoreLabel.getHeight() / 2);
+        player2ScoreLabel.setPosition(912 - player2ScoreLabel.getWidth() / 2, 80 - player2ScoreLabel.getHeight() / 2);
+
+        hudStage.addActor(backgroundImage);
+        hudStage.addActor(player1UsernameLabel);
+        hudStage.addActor(player2UsernameLabel);
+        hudStage.addActor(player1ScoreLabel);
+        hudStage.addActor(player2ScoreLabel);
     }
 
     @Override
     public void render(float delta) {
-        float deltaTime = Gdx.graphics.getDeltaTime();
+        update(delta);
 
+        draw();
+    }
+
+    public void update(float delta) {
         if (GameManager.getInstance().getHighestPlayerScore() == 7) {
             GameManager.getInstance().resetPlayerScores();
             int id = GameManager.getInstance().getWinningPlayer();
@@ -123,25 +161,43 @@ public class GameplayScreen implements Screen {
         }
 
         for (Player player : GameManager.getInstance().players) {
-            player.playerMovement(deltaTime);
+            player.playerMovement(delta);
             mapBoundsHandlerPlayer.constrainPlayer(player);
         }
 
-        GameManager.getInstance().updateBullets(deltaTime, assetManager);
+        for (Bullet bullet : GameManager.getInstance().getBullets()) {
+            mapBoundsHandlerBullet.handleBulletCollision(bullet, delta);
+        }
 
-        ScreenUtils.clear(1f, 1f, 1f, 1f);
+        GameManager.getInstance().updateBullets(delta, assetManager);
+
+        for (PlayerScore playerScore : GameManager.getInstance().getPlayerScores()) {
+            if (playerScore.getPlayerId() == 0) {
+                player1ScoreLabel.setText("SCORE:" + String.valueOf(playerScore.getScore()));
+                player1ScoreLabel.setPosition(112 - player1ScoreLabel.getWidth() / 2, 80 - player1ScoreLabel.getHeight() / 2);
+            } else if (playerScore.getPlayerId() == 1) {
+                player2ScoreLabel.setText("SCORE:" + String.valueOf(playerScore.getScore()));
+                player2ScoreLabel.setPosition(912 - player2ScoreLabel.getWidth() / 2, 80 - player2ScoreLabel.getHeight() / 2);
+            }
+        }
 
         gameplayCamera.update();
+
+        hudCamera.update();
+    }
+
+    public void draw() {
+        ScreenUtils.clear(Color.BLACK);
+
+        // O F F S E T   T O   C E N T E R   R E N D E R I N G
+        Matrix4 offsetProjectionMatrix = new Matrix4(gameplayCamera.combined);
+        offsetProjectionMatrix.translate(GameConfig.WORLD_UNITS_LEFT_OFFSET, 0, 0);
+
         tiledMapRenderer.setView(gameplayCamera);
+        tiledMapRenderer.getBatch().setProjectionMatrix(offsetProjectionMatrix);
         tiledMapRenderer.render();
 
-        shapeRenderer.setProjectionMatrix(gameplayCamera.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(0, 0, 0, 1);
-        shapeRenderer.rect(0, gameplayCamera.viewportHeight - 100, GameConfig.getWidth() * 4, 100);
-        shapeRenderer.end();
-
-        game.getBatch().setProjectionMatrix(gameplayCamera.combined);
+        game.getBatch().setProjectionMatrix(offsetProjectionMatrix);
         game.getBatch().begin();
 
         for (Player player : GameManager.getInstance().players) {
@@ -149,33 +205,26 @@ public class GameplayScreen implements Screen {
         }
 
         for (Bullet bullet : GameManager.getInstance().getBullets()) {
-            mapBoundsHandlerBullet.handleBulletCollision(bullet, deltaTime);
             game.getBatch().setColor(bullet.getColor());
             game.getBatch().draw(bullet.getTextureRegion(), bullet.getBounds().x, bullet.getBounds().y, bullet.getBounds().width, bullet.getBounds().height);
             game.getBatch().setColor(Color.WHITE);
         }
 
-        // Draw scores
-        for (PlayerScore playerScore : GameManager.getInstance().getPlayerScores()) {
-            if (playerScore.getPlayerId() == 0) {
-                layout.setText(font, "Green : " + playerScore.getScore());
-                font.setColor(Color.RED);
-                font.draw(game.getBatch(), layout, 10, gameplayCamera.viewportHeight - 10);
-            } else if (playerScore.getPlayerId() == 1) {
-                layout.setText(font, "Red: " + playerScore.getScore());
-                font.setColor(Color.GREEN);
-                font.draw(game.getBatch(), layout, gameplayCamera.viewportWidth - layout.width - 10, gameplayCamera.viewportHeight - 10);
-            }
-        }
-
         game.getBatch().end();
+
+        // D R A W   H U D
+        hudStage.draw();
     }
 
     @Override
     public void resize(int width, int height) {
         gameplayViewport.update(width, height);
-        gameplayCamera.setToOrtho(false, gameplayViewport.getWorldWidth(), gameplayViewport.getWorldHeight() + 100);
+        gameplayCamera.setToOrtho(false, gameplayViewport.getWorldWidth(), gameplayViewport.getWorldHeight());
         gameplayCamera.update();
+
+        hudViewport.update(width, height);
+        hudCamera.setToOrtho(false, hudViewport.getWorldWidth(), hudViewport.getWorldHeight());
+        hudCamera.update();
     }
 
     @Override

@@ -24,7 +24,6 @@ import si.um.feri.kompajler.screen.PreGameplayScreen;
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class DigitalniDvojcek extends Game {
     private SpriteBatch batch;
-    private Texture image;
     public AssetManager assetManager;
 
     // Dev branch :D
@@ -33,20 +32,22 @@ public class DigitalniDvojcek extends Game {
     @Override
     public void create() {
         batch = new SpriteBatch();
-        image = new Texture("libgdx.png");
 
         assetManager = new AssetManager();
+
         assetManager.load(AssetDescriptors.UI_SKIN);
+        assetManager.load(AssetDescriptors.UI_SKIN_NEON);
         assetManager.load(AssetDescriptors.SS_TEXT);
+        assetManager.load(AssetDescriptors.GAMEPLAY_BACKGROUND);
+        assetManager.load(AssetDescriptors.PLAYER_NAME_FONT);
         assetManager.finishLoading();
-        // tu laodaj ce mas kake assete za loadat
+        // tu loadaj ce mas kake assete za loadat
 
         Vector2 position = new Vector2(Constants.MAP_WIDTH / 2f, Constants.MAP_HEIGHT / 2f);
         MapScreen mapScreen = new MapScreen(this, null);
         mapScreen.fromBefore = false;
-        setScreen(mapScreen); //to je temporary pol naj bo nastavleno na main screen al kaj pac bo
-        // setScreen(new PreGameplayScreen(this)); //to je temporary pol naj bo nastavleno na main screen al kaj pac bo
-
+        /*setScreen(mapScreen); */
+        setScreen(new PreGameplayScreen(this));
 
         // GAME INFO
         System.out.println("\n\n|-----------------------------------------------|");
@@ -77,6 +78,5 @@ public class DigitalniDvojcek extends Game {
     @Override
     public void dispose() {
         batch.dispose();
-        image.dispose();
     }
 }
