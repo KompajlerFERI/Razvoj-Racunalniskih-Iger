@@ -1,9 +1,9 @@
 plugins {
-  id 'org.jetbrains.kotlin.jvm' version '1.9.20'
+  id 'org.jetbrains.kotlin.jvm'
 }
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-sourceSets.main.java.srcDirs = [ "src/main/java/" ]
+sourceSets.main.java.srcDirs = [ "src/" ]
 
 eclipse.project.name = appName + "-core"
 dependencies {

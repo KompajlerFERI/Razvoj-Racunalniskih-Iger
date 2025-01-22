@@ -1,0 +1,42 @@
+plugins {
+  id 'java-library'
+}
+
+java {
+  sourceCompatibility = JavaVersion.VERSION_11
+  targetCompatibility = JavaVersion.VERSION_11
+}
+
+apply plugin: "java"
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+sourceSets.main.java.srcDirs = [ "src/" ]
+
+project.ext.mainClassName = "si.um.feri.kompajler.server.ServerLauncher"
+
+tasks.register('dist', Jar) {
+  from files(sourceSets.main.output.classesDirs)
+  from files(sourceSets.main.output.resourcesDir)
+  from { configurations.runtimeClasspath.collect { zipTree(it) } }
+
+  manifest {
+    attributes 'Main-Class': 'si.um.feri.kompajler.server.ServerLauncher'
+  }
+}
+
+dist.dependsOn classes
+
+tasks.register('afterEclipseImport') {
+  doLast {
+    def classpath = new XmlParser().parse(file(".classpath"))
+    def writer = new FileWriter(file(".classpath"))
+    def printer = new XmlNodePrinter(new PrintWriter(writer))
+    printer.setPreserveWhitespace(true)
+    printer.print(classpath)
+  }
+}
+
+eclipse.project {
+  name = appName
+}
