@@ -6,22 +6,22 @@ filter: Nearest, Nearest
 repeat: none
 bullet
   rotate: false
-  xy: 60, 17
+  xy: 64, 0
   size: 10, 10
   orig: 10, 10
   offset: 0, 0
   index: -1
 img3
   rotate: false
-  xy: 2, 2
-  size: 27, 25
+  xy: 0, 0
+  size: 32, 32
   orig: 27, 25
   offset: 0, 0
   index: -1
 img4
   rotate: false
-  xy: 31, 2
-  size: 27, 25
+  xy: 32, 0
+  size: 32, 32
   orig: 27, 25
   offset: 0, 0
   index: -1

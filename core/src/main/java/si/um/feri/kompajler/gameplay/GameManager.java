@@ -15,15 +15,15 @@ public class GameManager {
     public Array<Bullet> bullets;
     public Array<Player> players;
     public Array<PlayerScore> playerScores;
-    private static final List<int[]> validPositions = new ArrayList<>();
+    private static final List<float[]> validPositions = new ArrayList<>();
     private static final Random random = new Random();
     public static int winner;
 
     static {
-        validPositions.add(new int[]{50, 50});
-        validPositions.add(new int[]{50, 1430});
-        validPositions.add(new int[]{1440, 50});
-        validPositions.add(new int[]{1440, 1430});
+        validPositions.add(new float[]{1.5f, 1.5f});
+        validPositions.add(new float[]{15.5f, 15.5f});
+        validPositions.add(new float[]{15.5f, 1.5f});
+        validPositions.add(new float[]{1.5f, 15.5f});
     }
 
     private GameManager() {
@@ -130,7 +130,7 @@ public class GameManager {
                 }
             }
             if (reset) {
-                int[][] positions = selectTwoRandomPositions();
+                float[][] positions = selectTwoRandomPositions();
                 for (int j = 0; j < players.size; j++) {
                     players.get(j).resetPosition(positions[j][0], positions[j][1]);
                 }
@@ -142,8 +142,8 @@ public class GameManager {
         }
     }
 
-    public int[][] selectTwoRandomPositions() {
+    public float[][] selectTwoRandomPositions() {
         Collections.shuffle(validPositions, random);
-        return new int[][]{validPositions.get(0), validPositions.get(1)};
+        return new float[][]{validPositions.get(0), validPositions.get(1)};
     }
 }

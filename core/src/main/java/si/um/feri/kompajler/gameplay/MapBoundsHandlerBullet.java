@@ -6,19 +6,23 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 public class MapBoundsHandlerBullet {
     private Array<Rectangle> walls;
+    private final float tileWidthInWorldUnits;
+    private final float tileHeightInWorldUnits;
 
-    public MapBoundsHandlerBullet(TiledMapTileLayer wallLayer) {
+    public MapBoundsHandlerBullet(TiledMapTileLayer wallLayer, float tileWidthInWorldUnits, float tileHeightInWorldUnits) {
         this.walls = new Array<>();
-        // Extract wall rectangles from the TiledMap layer
+        this.tileWidthInWorldUnits = tileWidthInWorldUnits;
+        this.tileHeightInWorldUnits = tileHeightInWorldUnits;
+
         for (int x = 0; x < wallLayer.getWidth(); x++) {
             for (int y = 0; y < wallLayer.getHeight(); y++) {
                 TiledMapTileLayer.Cell cell = wallLayer.getCell(x, y);
-                if (cell != null) { // Assuming non-null cells are walls
+                if (cell != null) {
                     Rectangle wall = new Rectangle(
-                        x * wallLayer.getTileWidth(),
-                        y * wallLayer.getTileHeight(),
-                        wallLayer.getTileWidth(),
-                        wallLayer.getTileHeight()
+                        x * tileWidthInWorldUnits,
+                        y * tileHeightInWorldUnits,
+                        tileWidthInWorldUnits,
+                        tileHeightInWorldUnits
                     );
                     walls.add(wall);
                 }

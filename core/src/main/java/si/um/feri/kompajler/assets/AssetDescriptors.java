@@ -1,6 +1,7 @@
 package si.um.feri.kompajler.assets;
 
 import com.badlogic.gdx.assets.AssetDescriptor;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -25,6 +26,11 @@ public class AssetDescriptors {
     public static final AssetDescriptor<TextureAtlas> GAMEPLAY_ATLAS =
         new AssetDescriptor<TextureAtlas>(AssetPaths.GAMEPLAY_ATLAS, TextureAtlas.class);
 
+    public static final AssetDescriptor<Texture> GAMEPLAY_BACKGROUND =
+        new AssetDescriptor<Texture>(AssetPaths.GAMEPLAY_BACKGROUND, Texture.class);
+
+    public static final AssetDescriptor<BitmapFont> PLAYER_NAME_FONT =
+        new AssetDescriptor<BitmapFont>(AssetPaths.PLAYER_NAME_FONT, BitmapFont.class);
 
     public static final AssetDescriptor<Sound> SHOOT_WAV =
         new AssetDescriptor<Sound>(AssetPaths.SHOOT_WAV, Sound.class);

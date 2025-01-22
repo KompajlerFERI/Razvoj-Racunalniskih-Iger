@@ -35,20 +35,20 @@ public class Player {
         if (id == 0) {
             this.tankBottom = atlas.findRegion(RegionNames.TANK_BOTTOM_GREEN);
             //this.tankTop = atlas.findRegion(RegionNames.TANK_TOP_GREEN);
-            float width = tankBottom.getRegionWidth() * 3.2f;
-            float height = tankBottom.getRegionHeight() * 3.2f;
-            this.initialX = 50;
-            this.initialY = 50;
-            this.rectangle = new Rectangle(50, 50, width, height);
+            float width = (tankBottom.getRegionWidth() - 3) / GameConfig.WORLD_UNIT_PIXELS;
+            float height = (tankBottom.getRegionHeight() - 3) / GameConfig.WORLD_UNIT_PIXELS;
+            this.initialX = 1.5f;
+            this.initialY = 1.5f;
+            this.rectangle = new Rectangle(initialX, initialY, width, height);
         }
         if (id == 1) {
             this.tankBottom = atlas.findRegion(RegionNames.TANK_BOTTOM_RED);
             //this.tankTop = atlas.findRegion(RegionNames.TANK_TOP_RED);
-            float width = tankBottom.getRegionWidth() * 3.2f;
-            float height = tankBottom.getRegionHeight() * 3.2f;
-            this.initialX = 1440;
-            this.initialY = 1430;
-            this.rectangle = new Rectangle(1440, 1430, width, height);
+            float width = (tankBottom.getRegionWidth() - 3) / GameConfig.WORLD_UNIT_PIXELS;;
+            float height = (tankBottom.getRegionHeight() - 3) / GameConfig.WORLD_UNIT_PIXELS;;
+            this.initialX = 15.5f;
+            this.initialY = 15.5f;
+            this.rectangle = new Rectangle(initialX, initialY, width, height);
         }
         this.rotation = 0;
         moving = false;
@@ -78,15 +78,15 @@ public class Player {
         return id;
     }
 
-    public void resetPosition(int x, int y) {
+    public void resetPosition(float x, float y) {
         this.rectangle.setPosition(x, y);
     }
 
     public void shoot() {
         assetManager.get(AssetDescriptors.SHOOT_WAV).play(0.01f);
         // Bullet dimensions
-        float bulletWidth = 10;
-        float bulletHeight = 10;
+        float bulletWidth = 0.3f;
+        float bulletHeight = 0.3f;
 
         // Calculate bullet's initial position (at the front of the tank)
         float bulletX = rectangle.x + rectangle.width / 2 - bulletWidth / 2;
@@ -115,16 +115,16 @@ public class Player {
             }
             if (Gdx.input.isKeyPressed(Input.Keys.W) && !stopMovement) {
                 float radians = (float) Math.toRadians(rotation);
-                float deltaX = (float) Math.cos(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
-                float deltaY = (float) Math.sin(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
+                float deltaX = (float) Math.cos(radians) * deltaTime * GameConfig.PLAYER_SPEED;
+                float deltaY = (float) Math.sin(radians) * deltaTime * GameConfig.PLAYER_SPEED;
 
                 rectangle.setPosition(rectangle.x + deltaX, rectangle.y + deltaY);
                 moving = true;
             }
             if (Gdx.input.isKeyPressed(Input.Keys.S) && !stopMovement) {
                 float radians = (float) Math.toRadians(rotation);
-                float deltaX = (float) Math.cos(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
-                float deltaY = (float) Math.sin(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
+                float deltaX = (float) Math.cos(radians) * deltaTime * GameConfig.PLAYER_SPEED;
+                float deltaY = (float) Math.sin(radians) * deltaTime * GameConfig.PLAYER_SPEED;
 
                 rectangle.setPosition(rectangle.x - deltaX, rectangle.y - deltaY);
                 moving = true;
@@ -149,16 +149,16 @@ public class Player {
             }
             if (Gdx.input.isKeyPressed(Input.Keys.UP) && !stopMovement) {
                 float radians = (float) Math.toRadians(rotation);
-                float deltaX = (float) Math.cos(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
-                float deltaY = (float) Math.sin(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
+                float deltaX = (float) Math.cos(radians) * deltaTime * GameConfig.PLAYER_SPEED;
+                float deltaY = (float) Math.sin(radians)* deltaTime * GameConfig.PLAYER_SPEED;
 
                 rectangle.setPosition(rectangle.x + deltaX, rectangle.y + deltaY);
                 moving = true;
             }
             if (Gdx.input.isKeyPressed(Input.Keys.DOWN) && !stopMovement) {
                 float radians = (float) Math.toRadians(rotation);
-                float deltaX = (float) Math.cos(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
-                float deltaY = (float) Math.sin(radians) * 100 * deltaTime * GameConfig.PLAYER_SPEED;
+                float deltaX = (float) Math.cos(radians) * deltaTime * GameConfig.PLAYER_SPEED;
+                float deltaY = (float) Math.sin(radians) * deltaTime * GameConfig.PLAYER_SPEED;
 
                 rectangle.setPosition(rectangle.x - deltaX, rectangle.y - deltaY);
                 moving = true;
