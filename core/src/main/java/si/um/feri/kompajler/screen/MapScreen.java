@@ -77,23 +77,25 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     JSONArray restaurants = null;
     Vector2 locationPlaceholder = null;
 
-    Texture texture_normal, texture_vegan, texture_pizza, texture_pizzanvegan;
+    Texture texture_normal, texture_vegeterean, texture_pizza, texture_pizzanvegeterean;
     Skin skin;
-    Window window;
     InfoScreen infoScreen;
+    Table table;
 
     private JSONObject selectedRestaurant = null;
     private Vector2 selectedRestaurantPosition = null;
 
     boolean hasMeatTag = false,
         hasMixedTag = false,
-        hasVeganTag = false,
+        hasvegetereanTag = false,
         hasSaladTag = false,
         hasSeaFoodTag = false,
         hasPizzaTag = false,
         hasFastFoodTag = false,
         hasCeliacFriendlyFoodTag = false,
         allTagsFalse = true;
+    boolean hasPizzaTagForRender = false,
+        hasvegetereanTagForRender = false;
 
 
     public MapScreen(DigitalniDvojcek game, MapScreen mapFromBefore) {
@@ -129,10 +131,9 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             this.restaurants = mapFromBefore.restaurants;
             this.locationPlaceholder = mapFromBefore.locationPlaceholder;
             this.texture_normal = mapFromBefore.texture_normal;
-            this.texture_vegan = mapFromBefore.texture_vegan;
+            this.texture_vegeterean = mapFromBefore.texture_vegeterean;
             this.texture_pizza = mapFromBefore.texture_pizza;
             this.skin = mapFromBefore.skin;
-            this.window = mapFromBefore.window;
             this.infoScreen = mapFromBefore.infoScreen;
             this.selectedRestaurant = mapFromBefore.selectedRestaurant;
             this.selectedRestaurantPosition = mapFromBefore.selectedRestaurantPosition;
@@ -142,16 +143,14 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         skin = assetManager.get(AssetDescriptors.UI_SKIN);
 
         stage = new Stage(viewport, batch);
-        Gdx.input.setInputProcessor(stage);
-        window = null;
         infoScreen = new InfoScreen(game, selectedRestaurant, this);
 
         touchPosition = new Vector3();
         // vem da naj bi z asset managerjem delal
         texture_normal = new Texture("map_screen/pin_normal_low_rez.png");
-        texture_vegan = new Texture("map_screen/pin_vegan_low_rez.png");
+        texture_vegeterean = new Texture("map_screen/pin_vegan_low_rez.png");
         texture_pizza = new Texture("map_screen/pin_pizza_low_rez.png");
-        texture_pizzanvegan = new Texture("map_screen/pin_pizzanvegan_low_rez.png");
+        texture_pizzanvegeterean = new Texture("map_screen/pin_pizzanvegan_low_rez.png");
 
         try {
             //in most cases, geolocation won't be in the center of the tile because tile borders are predetermined (geolocation can be at the corner of a tile)
@@ -192,70 +191,162 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
 
 
-        window = new Window("Filter", skin);
-        window.setSize(200, 200);
+
+        Window window = new Window("Filter", skin);
+        float windowWidth = 200 * camera.zoom;
+        float windowHeight = 200 * camera.zoom;
+        window.setSize(windowWidth, windowHeight);
         window.setPosition(0, 0);
         window.setMovable(false);
         window.setResizable(false);
 
         // Create a table to hold the elements
-        Table table = new Table();
+        table = new Table();
         table.top().left();
         table.pad(10);
         table.setFillParent(true);
 
         // Create the first label and button
-        Label meatLabel = new Label("Setting 1:", skin);
+        Label meatLabel = new Label("Meso:", skin);
         TextButton meatButton = new TextButton("OFF", skin);
         meatButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                String currentText = meatButton.getText().toString();
+                hasMeatTag = !hasMeatTag;
                 meatButton.setText(hasMeatTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
             }
         });
-
-        Label mixedLabel = new Label("Setting 2:", skin);
-        TextButton textButton2 = new TextButton("OFF", skin);
-        textButton2.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                String currentText = textButton2.getText().toString();
-                textButton2.setText(hasMixedTag ? "ON" : "OFF");
-            }
-        });
-
-        Label veganLabel = new Label("Setting 3:", skin);
-        TextButton textButton3 = new TextButton("OFF", skin);
-        textButton3.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                String currentText = textButton3.getText().toString();
-                textButton3.setText(hasVeganTag ? "ON" : "OFF");
-            }
-        });
-
         table.row().left();
         table.add(meatLabel).padRight(10);
         table.add(meatButton);
 
+        Label mixedLabel = new Label("Mešano:", skin);
+        TextButton mixedButton = new TextButton("OFF", skin);
+        mixedButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasMixedTag = !hasMixedTag;
+                mixedButton.setText(hasMixedTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
+            }
+        });
         table.row().left().padTop(10);
         table.add(mixedLabel).padRight(10);
-        table.add(textButton2);
+        table.add(mixedButton);
 
+        Label vegetereanLabel = new Label("Vegetarjansko:", skin);
+        TextButton vegetereanButton = new TextButton("OFF", skin);
+        vegetereanButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasvegetereanTag = !hasvegetereanTag;
+                vegetereanButton.setText(hasvegetereanTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
+            }
+        });
         table.row().left().padTop(10);
-        table.add(veganLabel).padRight(10);
-        table.add(textButton3);
+        table.add(vegetereanLabel).padRight(10);
+        table.add(vegetereanButton);
 
+        Label saladLabel = new Label("Solata:", skin);
+        TextButton saladButton = new TextButton("OFF", skin);
+        saladButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasSaladTag = !hasSaladTag;
+                saladButton.setText(hasSaladTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
+            }
+        });
+        table.row().left().padTop(10);
+        table.add(saladLabel).padRight(10);
+        table.add(saladButton);
+
+        Label seaFoodLabel = new Label("seaFood:", skin);
+        TextButton seaFoodButton = new TextButton("OFF", skin);
+        seaFoodButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasPizzaTag = !hasPizzaTag;
+                seaFoodButton.setText(hasPizzaTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
+            }
+        });
+        table.row().left().padTop(10);
+        table.add(seaFoodLabel).padRight(10);
+        table.add(seaFoodButton);
+
+        Label pizzaLabel = new Label("pizza:", skin);
+        TextButton pizzaButton = new TextButton("OFF", skin);
+        pizzaButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasPizzaTag = !hasPizzaTag;
+                pizzaButton.setText(hasPizzaTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
+            }
+        });
+        table.row().left().padTop(10);
+        table.add(pizzaLabel).padRight(10);
+        table.add(pizzaButton);
+
+        Label fastFoodLabel = new Label("fastFood:", skin);
+        TextButton fastFoodButton = new TextButton("OFF", skin);
+        fastFoodButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasFastFoodTag = !hasFastFoodTag;
+                fastFoodButton.setText(hasFastFoodTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
+            }
+        });
+        table.row().left().padTop(10);
+        table.add(fastFoodLabel).padRight(10);
+        table.add(fastFoodButton);
+
+        Label celiakLabel = new Label("Celiakiji\nprijazni obroki:", skin);
+        TextButton celiakButton = new TextButton("OFF", skin);
+        celiakButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasCeliacFriendlyFoodTag = !hasCeliacFriendlyFoodTag;
+                celiakButton.setText(hasCeliacFriendlyFoodTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
+            }
+        });
+        table.row().left().padTop(10);
+        table.add(celiakLabel).padRight(10);
+        table.add(celiakButton);
+
+        window.add(table);
+
+        //stage.addActor(window);
         stage.addActor(table);
-
 
         GestureDetector gestureDetector = new GestureDetector(this);
         InputMultiplexer inputMultiplexer = new InputMultiplexer();
         inputMultiplexer.addProcessor(stage);
         inputMultiplexer.addProcessor(gestureDetector);
-        Gdx.input.setInputProcessor(inputMultiplexer);
         Gdx.input.setInputProcessor(stage);
+        Gdx.input.setInputProcessor(inputMultiplexer);
+    }
+
+    private void checkIfAllTagsAreFalse() {
+        if (
+            hasMeatTag
+                || hasMixedTag
+                || hasvegetereanTag
+                || hasSaladTag
+                || hasSeaFoodTag
+                || hasPizzaTag
+                || hasFastFoodTag
+                || hasCeliacFriendlyFoodTag
+        ) {
+            allTagsFalse = false;
+        } else {
+            allTagsFalse = true;
+        }
     }
 
     @Override
@@ -273,43 +364,34 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             double latitude = coordinates.getDouble(1);  // Index 1 for latitude
             double longitude = coordinates.getDouble(0); // Index 0 for longitude
 
-            hasVeganTag = false;
-            hasPizzaTag = false;
+            hasPizzaTagForRender = false;
+            hasvegetereanTagForRender = false;
             JSONArray tags = restaurant.getJSONArray("tags");
             for (int j = 0; j < tags.length(); j++) {
                 String tagName = tags.getJSONObject(j).getString("name");
                 if (tagName.equalsIgnoreCase("vegetarijansko")) {
-                    hasVeganTag = true;
+                    hasPizzaTagForRender = true;
                 }
                 if (tagName.equalsIgnoreCase("pizza")) {
-                    hasPizzaTag = true;
+                    hasvegetereanTagForRender = true;
                 }
             }
 
             locationPlaceholder = MapRasterTiles.getPixelPosition(latitude, longitude, beginTile.x, beginTile.y);
             if (
                 allTagsFalse
-                || hasMeatTag
-                || hasMixedTag
-                || hasVeganTag
-                || hasSaladTag
-                || hasSeaFoodTag
-                || hasPizzaTag
-                || hasFastFoodTag
-                || hasCeliacFriendlyFoodTag
+                || (hasMeatTag && tags.toString().contains("meso"))
+                || (hasMixedTag && tags.toString().contains("mešano"))
+                || (hasvegetereanTag && tags.toString().contains("vegetarijansko"))
+                || (hasSaladTag && tags.toString().contains("solata"))
+                || (hasSeaFoodTag && tags.toString().contains("morski-sadeži"))
+                || (hasPizzaTag && tags.toString().contains("pizza"))
+                || (hasFastFoodTag && tags.toString().contains("hitra-hrana"))
+                || (hasCeliacFriendlyFoodTag && tags.toString().contains("celiakiji-prijazni-obroki"))
             ) {
-                drawMarkers(camera, batch, locationPlaceholder, hasVeganTag, hasPizzaTag);
+                drawMarkers(camera, batch, locationPlaceholder, hasPizzaTagForRender, hasvegetereanTagForRender);
             }
 
-            if (selectedRestaurant != null) {
-                // drawPopUpWindow(selectedRestaurant, selectedRestaurantPosition);
-            }
-            else {
-                if (window != null) {
-                    window.remove();
-                    window = null;
-                }
-            }
             stage.act(delta);
             stage.draw();
         }
@@ -336,17 +418,17 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
     }
 
-    private void drawMarkers(OrthographicCamera camera, SpriteBatch spriteBatch, Vector2 marker, boolean isVegan, boolean isPizza) {
+    private void drawMarkers(OrthographicCamera camera, SpriteBatch spriteBatch, Vector2 marker, boolean isvegeterean, boolean isPizza) {
         // Use a SpriteBatch for drawing images
         spriteBatch.setProjectionMatrix(camera.combined);
         spriteBatch.begin();
 
         // Choose the appropriate texture based on tags
         Texture texture;
-        if (isPizza && isVegan) {
-            texture = texture_pizzanvegan;
-        } else if (isVegan) {
-            texture = texture_vegan;
+        if (isPizza && isvegeterean) {
+            texture = texture_pizzanvegeterean;
+        } else if (isvegeterean) {
+            texture = texture_vegeterean;
         } else if (isPizza) {
             texture = texture_pizza;
         } else {
@@ -362,12 +444,6 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     }
 
     private void createHud() {
-        // make a hud one button on the right side
-        // and when its clicked it displays an on screen window
-        // that has toggle buttons for each tag
-        // and a close button
-
-        // Create a window with a title
 
     }
 
@@ -386,29 +462,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
     @Override
     public boolean touchDown(float x, float y, int pointer, int button) {
-        // If no window is open, proceed with normal touch handling
-        if (window == null) {
-            touchPosition.set(x, y, 0);
-            camera.unproject(touchPosition);
-        } else {
-            // Convert the touch position to world coordinates
-            float[] worldCoords = convertToWorld(x, y, camera);
-            float dragX = worldCoords[0];
-            float dragY = worldCoords[1];
-
-            // Convert window's position to screen coordinates (in case it's in world space)
-            camera.project(touchPosition.set(window.getX(), window.getY(), 0));
-            float windowX = touchPosition.x;
-            float windowY = touchPosition.y;
-
-            // Check if the touch is inside the window bounds in screen space
-            if (x >= windowX && x <= windowX + window.getWidth() && y >= windowY && y <= windowY + window.getHeight()) {
-                // Touch is inside the window, return true to consume the event
-                return true;
-            }
-        }
-
-        return false;  // Allow other touchDown events to be processed
+        return false;
     }
 
 
