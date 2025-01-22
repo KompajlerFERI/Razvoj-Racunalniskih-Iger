@@ -13,7 +13,7 @@ apply plugin: "java"
 
 sourceSets.main.java.srcDirs = [ "src/" ]
 
-project.ext.mainClassName = "si.um.feri.kompajler.server.ServerLauncher"
+project.ext.mainClassName = "si.um.feri.kompajler.network.server.ServerLauncher"
 
 tasks.register('dist', Jar) {
   from files(sourceSets.main.output.classesDirs)
@@ -21,7 +21,7 @@ tasks.register('dist', Jar) {
   from { configurations.runtimeClasspath.collect { zipTree(it) } }
 
   manifest {
-    attributes 'Main-Class': 'si.um.feri.kompajler.server.ServerLauncher'
+    attributes 'Main-Class': 'si.um.feri.kompajler.network.server.ServerLauncher'
   }
 }
 
