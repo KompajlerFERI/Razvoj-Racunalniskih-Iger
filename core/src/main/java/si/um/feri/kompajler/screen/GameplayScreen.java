@@ -25,6 +25,8 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+import java.util.Objects;
+
 import si.um.feri.kompajler.DigitalniDvojcek;
 import si.um.feri.kompajler.config.GameConfig;
 import si.um.feri.kompajler.DigitalniDvojcek;
@@ -72,9 +74,13 @@ public class GameplayScreen implements Screen {
     private MapBoundsHandlerPlayer mapBoundsHandlerPlayer;
     private MapBoundsHandlerBullet mapBoundsHandlerBullet;
 
-    public GameplayScreen(DigitalniDvojcek game) {
+    public GameplayScreen(DigitalniDvojcek game, String player2Username, String player1Username) {
         this.game = game;
         assetManager = game.getAssetManager();
+        if (!Objects.equals(player1Username, "") && !Objects.equals(player2Username, "")) {
+            this.player1Username = player1Username;
+            this.player2Username = player2Username;
+        }
     }
 
     @Override
@@ -146,7 +152,6 @@ public class GameplayScreen implements Screen {
     }
 
     public void update(float delta) {
-        System.out.println("WINNING: " + GameManager.getInstance().getWinningPlayer());
         if (GameManager.getInstance().getHighestPlayerScore() == 3) {
             int id = GameManager.getInstance().getWinningPlayer();
             GameManager.getInstance().resetPlayerScores();

@@ -1,3 +1,4 @@
+// PreGameplayScreen.java
 package si.um.feri.kompajler.screen;
 
 import com.badlogic.gdx.Game;
@@ -22,6 +23,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import si.um.feri.kompajler.DigitalniDvojcek;
 import si.um.feri.kompajler.assets.AssetDescriptors;
 import si.um.feri.kompajler.assets.AssetPaths;
+import si.um.feri.kompajler.config.GameConfig;
 
 public class PreGameplayScreen implements Screen {
     private DigitalniDvojcek game;
@@ -47,7 +49,7 @@ public class PreGameplayScreen implements Screen {
         preGameScreenTexture = new Texture(AssetPaths.PRE_GAME_SCREEN);
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
-        viewport = new FitViewport(800, 600, camera); // Adjust the viewport size as needed
+        viewport = new FitViewport(GameConfig.HUD_WIDTH, GameConfig.HUD_HEIGHT, camera); // Adjust the viewport size as needed
         viewport.apply();
         camera.position.set(camera.viewportWidth / 2, camera.viewportHeight / 2, 0);
 
@@ -65,9 +67,9 @@ public class PreGameplayScreen implements Screen {
         mainTable.add(playButton).colspan(2).pad(10).width(150).height(50);
 
         Table inputTable = new Table();
-        inputTable.add(player2Field).width(200).pad(10).left().expandX().padRight(120);
-        inputTable.add(player1Field).width(200).pad(10).right().expandX().padLeft(120);
-        inputTable.setPosition(viewport.getWorldWidth() / 2, viewport.getWorldHeight() / 2 - 50);
+        inputTable.add(player2Field).width(200).pad(10).left().expandX().padRight(280);
+        inputTable.add(player1Field).width(200).pad(10).right().expandX().padLeft(280);
+        inputTable.setPosition(viewport.getWorldWidth() / 2, viewport.getWorldHeight() / 2 - 150);
 
         stage.addActor(mainTable);
         stage.addActor(inputTable);
@@ -85,7 +87,9 @@ public class PreGameplayScreen implements Screen {
         playButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new GameplayScreen(game));
+                String player1Name = player1Field.getText();
+                String player2Name = player2Field.getText();
+                game.setScreen(new GameplayScreen(game, player1Name, player2Name));
             }
         });
     }

@@ -24,6 +24,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import si.um.feri.kompajler.DigitalniDvojcek;
 import si.um.feri.kompajler.assets.AssetDescriptors;
 import si.um.feri.kompajler.assets.AssetPaths;
+import si.um.feri.kompajler.config.GameConfig;
 import si.um.feri.kompajler.gameplay.GameManager;
 
 public class VictoryScreen implements Screen {
@@ -46,18 +47,15 @@ public class VictoryScreen implements Screen {
 
     @Override
     public void show() {
-        System.out.println("INNER: " + winner);
         if (winner.equals("GREEN")) {
-            System.out.println("WINNER GREEN");
             screenTexture = new Texture(AssetPaths.WINNER_TEXTURE_GREEN);
         }
         else if (winner.equals("RED")) {
-            System.out.println("WINNER RED");
             screenTexture = new Texture(AssetPaths.WINNER_TEXTURE_RED);
         }
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
-        viewport = new FitViewport(1280, 960, camera);
+        viewport = new FitViewport(GameConfig.HUD_WIDTH, GameConfig.HUD_HEIGHT, camera);
         viewport.apply();
         camera.position.set(camera.viewportWidth / 2, camera.viewportHeight / 2, 0);
 
