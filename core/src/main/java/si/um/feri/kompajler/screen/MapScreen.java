@@ -19,11 +19,21 @@ import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
+import com.badlogic.gdx.math.Bezier;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Action;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.actions.TemporalAction;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -35,6 +45,8 @@ import org.json.JSONObject;
 import si.um.feri.kompajler.DigitalniDvojcek;
 import si.um.feri.kompajler.assets.AssetDescriptors;
 import si.um.feri.kompajler.assets.AssetPaths;
+import si.um.feri.kompajler.config.GameConfig;
+import si.um.feri.kompajler.gameplay.GameManager;
 import si.um.feri.kompajler.utils.ApiHelper;
 import si.um.feri.kompajler.utils.Constants;
 import si.um.feri.kompajler.utils.Geolocation;
@@ -42,6 +54,10 @@ import si.um.feri.kompajler.utils.MapRasterTiles;
 import si.um.feri.kompajler.utils.ZoomXY;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 
 public class MapScreen implements Screen, GestureDetector.GestureListener {
@@ -64,14 +80,13 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     private Texture[] mapTiles;
     private ZoomXY beginTile;   // top left tile
 
-    // center geolocation
-    private final Geolocation CENTER_GEOLOCATION = new Geolocation(46.545195, 15.644645);
+    private final Geolocation CENTER_GEOLOCATION = new Geolocation(46.548964, 15.62816);
 
     String jsonResponse = null;
     JSONArray restaurants = null;
     Vector2 locationPlaceholder = null;
 
-    Texture texture_normal, texture_vegan, texture_pizza, texture_pizzanvegan;
+    Texture texture_normal, texture_vegan, texture_pizza, texture_pizzanvegan, personTexture, restaurantDefaultTexture, pizzeriaTexture, fastFoodRestaurantTexture;
     Skin skin;
     Window window;
     InfoScreen infoScreen;
@@ -87,47 +102,21 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
     @Override
     public void show() {
-        if (mapFromBefore == null) {
-            shapeRenderer = new ShapeRenderer();
-            batch = new SpriteBatch();
-            this.camera = new OrthographicCamera();
-            viewport = new FitViewport(800, 800, camera);
-            camera.viewportWidth = Constants.MAP_WIDTH / 2f;
-            camera.viewportHeight = Constants.MAP_HEIGHT / 2f;
-            camera.setToOrtho(false, Constants.MAP_WIDTH, Constants.MAP_HEIGHT);
-            camera.position.set(Constants.MAP_WIDTH / 2f, Constants.MAP_HEIGHT / 2f, 0);
-            camera.zoom = 2f;
-        } else {
-            this.camera = mapFromBefore.camera;
-            camera.update();
-            this.viewport = mapFromBefore.viewport;
-            this.batch = mapFromBefore.batch;
-            this.shapeRenderer = mapFromBefore.shapeRenderer;
-            this.touchPosition = mapFromBefore.touchPosition;
-            this.tiledMap = mapFromBefore.tiledMap;
-            this.tiledMapRenderer = mapFromBefore.tiledMapRenderer;
-            this.mapTiles = mapFromBefore.mapTiles;
-            this.beginTile = mapFromBefore.beginTile;
-            this.jsonResponse = mapFromBefore.jsonResponse;
-            this.restaurants = mapFromBefore.restaurants;
-            this.locationPlaceholder = mapFromBefore.locationPlaceholder;
-            this.texture_normal = mapFromBefore.texture_normal;
-            this.texture_vegan = mapFromBefore.texture_vegan;
-            this.texture_pizza = mapFromBefore.texture_pizza;
-            this.skin = mapFromBefore.skin;
-            this.window = mapFromBefore.window;
-            this.infoScreen = mapFromBefore.infoScreen;
-            this.selectedRestaurant = mapFromBefore.selectedRestaurant;
-            this.selectedRestaurantPosition = mapFromBefore.selectedRestaurantPosition;
-        }
-        camera.update();
+        camera = new OrthographicCamera();
+        viewport = new FitViewport(GameConfig.HUD_WIDTH, GameConfig.HUD_HEIGHT, camera);
+        camera.zoom = Constants.MAX_CAMERA_ZOOM;
+
+        batch = game.getBatch();
+        shapeRenderer = new ShapeRenderer();
+
         assetManager = game.assetManager;
         skin = assetManager.get(AssetDescriptors.UI_SKIN);
 
         stage = new Stage(viewport, batch);
-        Gdx.input.setInputProcessor(stage);
+        /*stage.addActor(createCrowdAnimation());*/
+
         window = null;
-        infoScreen = new InfoScreen(game, selectedRestaurant, this);
+        /*infoScreen = new InfoScreen(game, selectedRestaurant, this);*/
 
         GestureDetector gestureDetector = new GestureDetector(this);
         Gdx.input.setInputProcessor(gestureDetector);
@@ -138,6 +127,10 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         texture_vegan = new Texture("map_screen/pin_vegan_low_rez.png");
         texture_pizza = new Texture("map_screen/pin_pizza_low_rez.png");
         texture_pizzanvegan = new Texture("map_screen/pin_pizzanvegan_low_rez.png");
+        personTexture = new Texture("map_screen/person-solid.png");
+        restaurantDefaultTexture = new Texture("map_screen/restaurant_normal.png");
+        pizzeriaTexture = new Texture("map_screen/restaurant_pizza.png");
+        fastFoodRestaurantTexture = new Texture("map_screen/restaurant_burger.png");
 
         try {
             //in most cases, geolocation won't be in the center of the tile because tile borders are predetermined (geolocation can be at the corner of a tile)
@@ -165,26 +158,77 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         layers.add(layer);
 
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
+
         try {
             jsonResponse = ApiHelper.makeGetRequest(AssetPaths.URL + "restaurants");
             if (jsonResponse != null) {
                 restaurants = new JSONArray(jsonResponse);
+                sortRestaurantsByCoordinates();
             } else {
                 System.out.println("Failed to fetch data from the API.");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        // T E M P
+        for (int i = 0; i < restaurants.length(); i++) {
+            JSONObject restaurant = restaurants.getJSONObject(i);
+            JSONObject location = restaurant.getJSONObject("location");
+            JSONArray coordinates = location.getJSONArray("coordinates");
+            int lastCapacity = restaurant.getInt("lastCapacity");
+            int maxCapacity = restaurant.getInt("maxCapacity");
+            double latitude = coordinates.getDouble(1);  // Index 1 for latitude
+            double longitude = coordinates.getDouble(0); // Index 0 for longitude
+
+            Vector2 temp = MapRasterTiles.getPixelPosition(latitude, longitude, beginTile.x, beginTile.y);
+
+            int numberOfWanderingPeople = (int) ((lastCapacity / (float) maxCapacity) * 10);
+
+            for(int j = 0; j < numberOfWanderingPeople; j++) {
+                stage.addActor(createWanderingPerson(temp.x, temp.y));
+            }
+        }
+    }
+
+    public void update(float delta) {
+        handleInput();
+
+        camera.update();
     }
 
     @Override
     public void render(float delta) {
-        ScreenUtils.clear(0, 0, 0, 1);
-        handleInput();
-        camera.update();
+        ScreenUtils.clear(Color.WHITE);
+
+        update(delta);
+
         tiledMapRenderer.setView(camera);
         tiledMapRenderer.render();
 
+        draw();
+
+        if(camera.zoom <= 0.9f) {
+            stage.act(delta);
+            stage.draw();
+        }
+    }
+
+    public void draw() {
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+
+
+        if(camera.zoom <= 0.9f) {
+            drawRestaurants();
+        } else {
+            drawMarkers();
+        }
+
+        batch.end();
+    }
+
+    public void drawMarkers() {
         for (int i = 0; i < restaurants.length(); i++) {
             JSONObject restaurant = restaurants.getJSONObject(i);
             JSONObject location = restaurant.getJSONObject("location");
@@ -206,10 +250,10 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             }
 
             locationPlaceholder = MapRasterTiles.getPixelPosition(latitude, longitude, beginTile.x, beginTile.y);
-            drawMarkers(camera, batch, locationPlaceholder, hasVeganTag, hasPizzaTag);
+            drawMarker(camera, locationPlaceholder, hasVeganTag, hasPizzaTag);
 
             if (selectedRestaurant != null) {
-                // drawPopUpWindow(selectedRestaurant, selectedRestaurantPosition);
+                drawPopUpWindow(selectedRestaurant, selectedRestaurantPosition);
             }
             else {
                 if (window != null) {
@@ -217,15 +261,94 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
                     window = null;
                 }
             }
-            stage.act(delta);
-            stage.draw();
+            /*stage.act(delta);
+            stage.draw();*/
         }
     }
 
-    /*
+    private void drawMarker(OrthographicCamera camera, Vector2 marker, boolean isVegan, boolean isPizza) {
+
+        // Choose the appropriate texture based on tags
+        Texture texture;
+        if (isPizza && isVegan) {
+            texture = texture_pizzanvegan;
+        } else if (isVegan) {
+            texture = texture_vegan;
+        } else if (isPizza) {
+            texture = texture_pizza;
+        } else {
+            texture = texture_normal;
+        }
+
+        // Draw the texture at the marker position
+        float camZoom = camera.zoom; // Set a fixed size for the pin
+        float pinWidth = camZoom * texture.getWidth() / 2 * 0.8f;
+        float pinHeight = camZoom * texture.getHeight() / 2 * 0.8f;
+        batch.draw(texture, marker.x - pinWidth / 2, marker.y, pinWidth, pinHeight);
+    }
+
+    public void drawRestaurants() {
+        for (int i = 0; i < restaurants.length(); i++) {
+            JSONObject restaurant = restaurants.getJSONObject(i);
+            JSONObject location = restaurant.getJSONObject("location");
+            JSONArray coordinates = location.getJSONArray("coordinates");
+            double latitude = coordinates.getDouble(1);  // Index 1 for latitude
+            double longitude = coordinates.getDouble(0); // Index 0 for longitude
+
+            boolean hasPizzaTag = false;
+            boolean hasFastFoodTag = false;
+            JSONArray tags = restaurant.getJSONArray("tags");
+            for (int j = 0; j < tags.length(); j++) {
+                String tagName = tags.getJSONObject(j).getString("name");
+                if (tagName.equalsIgnoreCase("pizza")) {
+                    hasPizzaTag = true;
+                }
+                if (tagName.equalsIgnoreCase("hitra-hrana")) {
+                    hasFastFoodTag = true;
+                }
+            }
+
+            locationPlaceholder = MapRasterTiles.getPixelPosition(latitude, longitude, beginTile.x, beginTile.y);
+            drawRestaurant(camera, locationPlaceholder, hasFastFoodTag, hasPizzaTag);
+
+            if (selectedRestaurant != null) {
+                drawPopUpWindow(selectedRestaurant, selectedRestaurantPosition);
+            }
+            else {
+                if (window != null) {
+                    window.remove();
+                    window = null;
+                }
+            }
+            /*stage.act(delta);
+            stage.draw();*/
+        }
+    }
+
+    private void drawRestaurant(OrthographicCamera camera, Vector2 marker, boolean isFastFood, boolean isPizza) {
+
+        // Choose the appropriate texture based on tags
+        Texture texture;
+        if (isPizza) {
+            texture = pizzeriaTexture;
+        } else if (isFastFood) {
+            texture = fastFoodRestaurantTexture;
+        } else {
+            texture = restaurantDefaultTexture;
+        }
+
+        // Draw the texture at the marker position
+        float camZoom = camera.zoom; // Set a fixed size for the pin
+        float pinWidth = camZoom * texture.getWidth() / 2 * 0.4f;
+        float pinHeight = camZoom * texture.getHeight() / 2 * 0.4f;
+        batch.draw(texture, marker.x - pinWidth / 2, marker.y, pinWidth, pinHeight);
+    }
+
+
+
     private void drawPopUpWindow(JSONObject restaurant, Vector2 position) {
-        float width = viewport.getScreenWidth() * camera.zoom * 0.8f;
-        float height = viewport.getScreenHeight() * camera.zoom * 0.5f;
+        float width = viewport.getScreenWidth();
+        float height = viewport.getScreenHeight() / 2;
 
         String name = restaurant.optString("name", "Unknown");
         String address = restaurant.optString("address", "No address available");
@@ -299,11 +422,23 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         stage.clear();
         stage.addActor(window);
     }
-    */
 
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
+    }
+
+    @Override
+    public void dispose() {
+        shapeRenderer.dispose();
+        texture_normal.dispose();
+        texture_vegan.dispose();
+        texture_pizza.dispose();
+        texture_pizzanvegan.dispose();
+        personTexture.dispose();
+        restaurantDefaultTexture.dispose();
+        pizzeriaTexture.dispose();
+        fastFoodRestaurantTexture.dispose();
     }
 
     @Override
@@ -313,50 +448,12 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
     @Override
     public void resume() {
-
+        // No specific action needed for now
     }
 
     @Override
     public void hide() {
-
-    }
-
-    private void drawMarkers(OrthographicCamera camera, SpriteBatch spriteBatch, Vector2 marker, boolean isVegan, boolean isPizza) {
-        // Use a SpriteBatch for drawing images
-        spriteBatch.setProjectionMatrix(camera.combined);
-        spriteBatch.begin();
-
-        // Choose the appropriate texture based on tags
-        Texture texture;
-        if (isPizza && isVegan) {
-            texture = texture_pizzanvegan;
-        } else if (isVegan) {
-            texture = texture_vegan;
-        } else if (isPizza) {
-            texture = texture_pizza;
-        } else {
-            texture = texture_normal;
-        }
-
-        // Draw the texture at the marker position
-        float camZoom = camera.zoom; // Set a fixed size for the pin
-        float pinWidth = camZoom * texture.getWidth() / 2 * 0.8f;
-        float pinHeight = camZoom * texture.getHeight() / 2 * 0.8f;
-        spriteBatch.draw(texture, marker.x - pinWidth / 2, marker.y, pinWidth, pinHeight);
-        spriteBatch.end();
-    }
-
-    private void drawMarkers(Vector2 marker) {
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.setColor(Color.RED);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.circle(marker.x, marker.y, 10);
-        shapeRenderer.end();
-    }
-
-    @Override
-    public void dispose() {
-        shapeRenderer.dispose();
+        // No specific action needed for now
     }
 
     @Override
@@ -446,11 +543,6 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         return true;
     }
 
-    private float[] convertToWorld(float screenX, float screenY, Camera camera) {
-        Vector3 worldCoords = camera.unproject(new Vector3(screenX, screenY, 0));
-        return new float[]{worldCoords.x, worldCoords.y};
-    }
-
     @Override
     public boolean longPress(float x, float y) {
         return false;
@@ -463,7 +555,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
     @Override
     public boolean pan(float x, float y, float deltaX, float deltaY) {
-        camera.translate(-deltaX, deltaY);
+        camera.translate(-deltaX * camera.zoom, deltaY * camera.zoom);
         return false;
     }
 
@@ -475,9 +567,9 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     @Override
     public boolean zoom(float initialDistance, float distance) {
         if (initialDistance >= distance)
-            camera.zoom += 0.02;
+            camera.zoom += Constants.CAMERA_ZOOM_SPEED;
         else
-            camera.zoom -= 0.02;
+            camera.zoom -= Constants.CAMERA_ZOOM_SPEED;
         return false;
     }
 
@@ -493,32 +585,92 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
     private void handleInput() {
         if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-            camera.zoom += 0.02;
+            camera.zoom = MathUtils.clamp(camera.zoom + Constants.CAMERA_ZOOM_SPEED, Constants.MIN_CAMERA_ZOOM, Constants.MAX_CAMERA_ZOOM);
         }
         if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
-            camera.zoom -= 0.02;
+            camera.zoom = MathUtils.clamp(camera.zoom - Constants.CAMERA_ZOOM_SPEED, Constants.MIN_CAMERA_ZOOM, Constants.MAX_CAMERA_ZOOM);
         }
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            camera.translate(-9, 0, 0);
+            camera.translate(-Constants.CAMERA_MOVEMENT_SPEED * camera.zoom, 0, 0);
         }
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            camera.translate(9, 0, 0);
+            camera.translate(Constants.CAMERA_MOVEMENT_SPEED * camera.zoom, 0, 0);
         }
         if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-            camera.translate(0, -9, 0);
+            camera.translate(0, -Constants.CAMERA_MOVEMENT_SPEED * camera.zoom, 0);
         }
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-            camera.translate(0, 9, 0);
+            camera.translate(0, Constants.CAMERA_MOVEMENT_SPEED * camera.zoom, 0);
         }
 
-        if (!fromBefore) {
-            camera.zoom = MathUtils.clamp(camera.zoom, 0.5f, 1.9f);
+        float effectiveViewportWidth = camera.viewportWidth * camera.zoom;
+        float effectiveViewportHeight = camera.viewportHeight * camera.zoom;
 
-            float effectiveViewportWidth = camera.viewportWidth * camera.zoom;
-            float effectiveViewportHeight = camera.viewportHeight * camera.zoom;
+        camera.position.x = MathUtils.clamp(camera.position.x, effectiveViewportWidth / 2f, Constants.MAP_WIDTH - effectiveViewportWidth / 2f);
+        camera.position.y = MathUtils.clamp(camera.position.y, effectiveViewportHeight / 2f, Constants.MAP_HEIGHT - effectiveViewportHeight / 2f);
+    }
 
-            camera.position.x = MathUtils.clamp(camera.position.x, effectiveViewportWidth / 2f, Constants.MAP_WIDTH - effectiveViewportWidth / 2f);
-            camera.position.y = MathUtils.clamp(camera.position.y, effectiveViewportHeight / 2f, Constants.MAP_HEIGHT - effectiveViewportHeight / 2f);
+    private float[] convertToWorld(float screenX, float screenY, Camera camera) {
+        Vector3 worldCoords = camera.unproject(new Vector3(screenX, screenY, 0));
+        return new float[]{worldCoords.x, worldCoords.y};
+    }
+
+    private Actor createWanderingPerson(float centerX, float centerY) {
+        Image person = new Image(personTexture);
+        person.setScale(0.1f);
+
+        person.setPosition(getRandomPosition(centerX, centerY).x, getRandomPosition(centerX, centerY).y);
+        person.addAction(
+            Actions.forever(
+                Actions.sequence(
+                    Actions.moveTo(getRandomPosition(centerX, centerY).x, getRandomPosition(centerX, centerY).y, MathUtils.random(1f, 3f)),
+                    Actions.delay(MathUtils.random(1f, 2f)),
+                    Actions.moveTo(getRandomPosition(centerX, centerY).x, getRandomPosition(centerX, centerY).y, MathUtils.random(1f, 3f)),
+                    Actions.delay(MathUtils.random(1f, 2f)),
+                    Actions.moveTo(getRandomPosition(centerX, centerY).x, getRandomPosition(centerX, centerY).y, MathUtils.random(1f, 3f)),
+                    Actions.delay(MathUtils.random(1f, 2f)),
+                    Actions.moveTo(getRandomPosition(centerX, centerY).x, getRandomPosition(centerX, centerY).y, MathUtils.random(1f, 3f)),
+                    Actions.delay(MathUtils.random(1f, 2f)),
+                    Actions.moveTo(getRandomPosition(centerX, centerY).x, getRandomPosition(centerX, centerY).y, MathUtils.random(1f, 3f)),
+                    Actions.delay(MathUtils.random(1f, 2f))
+                )
+            )
+        );
+
+        return person;
+    }
+
+    private Vector2 getRandomPosition(float centerX, float centerY) {
+        float radius = 20; // Define the radius
+        float angle = MathUtils.random(0, 2 * MathUtils.PI); // Random angle
+        float distance = MathUtils.random(0, radius); // Random distance within the radius
+        float x = centerX + distance * MathUtils.cos(angle);
+        float y = centerY + distance * MathUtils.sin(angle);
+        return new Vector2(x, y);
+    }
+
+    public void sortRestaurantsByCoordinates() {
+        List<JSONObject> restaurantList = new ArrayList<>();
+        for (int i = 0; i < restaurants.length(); i++) {
+            restaurantList.add(restaurants.getJSONObject(i));
         }
+
+        Collections.sort(restaurantList, new Comparator<JSONObject>() {
+            @Override
+            public int compare(JSONObject a, JSONObject b) {
+                double latA = a.getJSONObject("location").getJSONArray("coordinates").getDouble(1);
+                double lonA = a.getJSONObject("location").getJSONArray("coordinates").getDouble(0);
+                double latB = b.getJSONObject("location").getJSONArray("coordinates").getDouble(1);
+                double lonB = b.getJSONObject("location").getJSONArray("coordinates").getDouble(0);
+
+                if (latA != latB) {
+                    return Double.compare(latB, latA); // Sort by latitude descending
+                } else {
+                    return Double.compare(lonA, lonB); // Sort by longitude ascending
+                }
+            }
+        });
+
+        restaurants = new JSONArray(restaurantList);
     }
 }
