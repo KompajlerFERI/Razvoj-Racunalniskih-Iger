@@ -7,7 +7,7 @@ public class Constants {
     public static final int ZOOM = 14;
 
     public static final float CAMERA_MOVEMENT_SPEED = 3f;
-    public static final float CAMERA_ZOOM_SPEED = 0.02f;
+    public static final float CAMERA_ZOOM_SPEED = 0.01f;
     public static final float MIN_CAMERA_ZOOM = 0.5f;
     public static final float MAX_CAMERA_ZOOM = 2.5f;
     public static final int MAP_WIDTH = MapRasterTiles.TILE_SIZE * NUM_TILES;

@@ -26,6 +26,8 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -33,6 +35,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.Timer;
@@ -96,14 +99,29 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     Window window;
     /*InfoScreen infoScreen;*/
 
+    Button toggleWindowOff, toggleWindowOn;
+
     private MqttConfig mqttConfig;
 
     private JSONObject selectedRestaurant = null;
     private Vector2 selectedRestaurantPosition = null;
+
+    boolean hasMeatTag = false,
+        hasMixedTag = false,
+        hasVegetereanTag = false,
+        hasSaladTag = false,
+        hasSeaFoodTag = false,
+        hasPizzaTag = false,
+        hasFastFoodTag = false,
+        hasCeliacFriendlyFoodTag = false,
+        allTagsFalse = true;
+    boolean hasPizzaTagForRender = false,
+        hasvegetereanTagForRender = false;
+    boolean toggleWindow = false;
     private boolean isPanning = false;
     private float startX, startY, startZoom;
     private float targetX, targetY, targetZoom;
-    private float duration = 0.5f; // 2 seconds for the transition
+    private float duration = 0.5f;
     private long startTime;
 
     public MapScreen(DigitalniDvojcek game, MapScreen mapFromBefore) {
@@ -205,6 +223,35 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         hudViewport = new FitViewport(GameConfig.HUD_WIDTH, GameConfig.HUD_HEIGHT);
         hudStage = new Stage(hudViewport);
 
+        toggleWindowOn = new Button(skin, "left");
+        toggleWindowOff = new Button(skin, "right");
+        toggleWindowOn.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                toggleWindow = true;
+                toggleWindowOn.setVisible(false);
+                toggleWindowOff.setVisible(true);
+                window.setVisible(true);
+            }
+        });
+        toggleWindowOff.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                toggleWindow = false;
+                toggleWindowOn.setVisible(true);
+                toggleWindowOff.setVisible(false);
+                window.setVisible(false);
+            }
+        });
+
+        hudStage.addActor(toggleWindowOff);
+        hudStage.addActor(toggleWindowOn);
+
+        window = createTableWithButtons();
+        hudStage.addActor(window);
+
+        window.setVisible(false);
+
         InputMultiplexer inputMultiplexer = new InputMultiplexer();
         inputMultiplexer.addProcessor(hudStage);
         inputMultiplexer.addProcessor(gestureDetector);
@@ -223,6 +270,146 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         }
 
         camera.update();
+    }
+
+    private Window createTableWithButtons() {
+        Window newWindow = new Window("Filter", skin);
+        float newWindowWidth = 240;
+        float newWindowHeight = 350;
+        newWindow.setSize(newWindowWidth, newWindowHeight);
+        newWindow.setPosition((hudViewport.getWorldWidth() - newWindowWidth) / 2, (hudViewport.getWorldHeight() - newWindowHeight) / 2);
+        newWindow.setMovable(false);
+        newWindow.setResizable(false);
+
+        Table newTable = new Table();
+        newTable.top().left();
+        newTable.padTop(84);
+        newTable.setFillParent(true);
+
+        Label meatLabel = new Label("Meso:", skin);
+        CheckBox meatCheckBox = new CheckBox("", skin, "switch");
+        meatCheckBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasMeatTag = meatCheckBox.isChecked();
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left();
+        newTable.add(meatLabel).padRight(10);
+        newTable.add(meatCheckBox);
+
+        Label mixedLabel = new Label("Mešano:", skin);
+        CheckBox mixedCheckBox = new CheckBox("", skin, "switch");
+        mixedCheckBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasMixedTag = mixedCheckBox.isChecked();
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left().padTop(10);
+        newTable.add(mixedLabel).padRight(10);
+        newTable.add(mixedCheckBox);
+
+        Label vegetereanLabel = new Label("Vegetarjansko:", skin);
+        CheckBox vegetereanCheckBox = new CheckBox("", skin, "switch");
+        vegetereanCheckBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasVegetereanTag = vegetereanCheckBox.isChecked();
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left().padTop(10);
+        newTable.add(vegetereanLabel).padRight(10);
+        newTable.add(vegetereanCheckBox);
+
+        Label saladLabel = new Label("Solata:", skin);
+        CheckBox saladCheckBox = new CheckBox("", skin, "switch");
+        saladCheckBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasSaladTag = saladCheckBox.isChecked();
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left().padTop(10);
+        newTable.add(saladLabel).padRight(10);
+        newTable.add(saladCheckBox);
+
+        Label seaFoodLabel = new Label("Morska hrana:", skin);
+        CheckBox seaFoodCheckBox = new CheckBox("", skin, "switch");
+        seaFoodCheckBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasPizzaTag = seaFoodCheckBox.isChecked();
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left().padTop(10);
+        newTable.add(seaFoodLabel).padRight(10);
+        newTable.add(seaFoodCheckBox);
+
+        Label pizzaLabel = new Label("Pica:", skin);
+        CheckBox pizzaCheckBox = new CheckBox("", skin, "switch");
+        pizzaCheckBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasPizzaTag = pizzaCheckBox.isChecked();
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left().padTop(10);
+        newTable.add(pizzaLabel).padRight(10);
+        newTable.add(pizzaCheckBox);
+
+        Label fastFoodLabel = new Label("Hitra hrana:", skin);
+        CheckBox fastFoodCheckBox = new CheckBox("", skin, "switch");
+        fastFoodCheckBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasFastFoodTag = fastFoodCheckBox.isChecked();
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left().padTop(10);
+        newTable.add(fastFoodLabel).padRight(10);
+        newTable.add(fastFoodCheckBox);
+
+        Label celiakLabel = new Label("Celiakiji\nprijazni obroki:", skin);
+        CheckBox celiakCheckBox = new CheckBox("", skin, "switch");
+        celiakCheckBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasCeliacFriendlyFoodTag = celiakCheckBox.isChecked();
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left().padTop(10);
+        newTable.add(celiakLabel).padRight(10);
+        newTable.add(celiakCheckBox);
+
+        newWindow.add(newTable);
+
+        return newWindow;
+    }
+
+    private void checkIfAllTagsAreFalse() {
+        if (
+            hasMeatTag
+                || hasMixedTag
+                || hasVegetereanTag
+                || hasSaladTag
+                || hasSeaFoodTag
+                || hasPizzaTag
+                || hasFastFoodTag
+                || hasCeliacFriendlyFoodTag
+        ) {
+            allTagsFalse = false;
+        } else {
+            allTagsFalse = true;
+        }
     }
 
     @Override
@@ -267,23 +454,36 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             double latitude = coordinates.getDouble(1);  // Index 1 for latitude
             double longitude = coordinates.getDouble(0); // Index 0 for longitude
 
-            boolean hasVeganTag = false;
-            boolean hasPizzaTag = false;
+            hasPizzaTagForRender = false;
+            hasvegetereanTagForRender = false;
             JSONArray tags = restaurant.getJSONArray("tags");
             for (int j = 0; j < tags.length(); j++) {
                 String tagName = tags.getJSONObject(j).getString("name");
                 if (tagName.equalsIgnoreCase("vegetarijansko")) {
-                    hasVeganTag = true;
+                    hasPizzaTagForRender = true;
                 }
                 if (tagName.equalsIgnoreCase("pizza")) {
-                    hasPizzaTag = true;
+                    hasvegetereanTagForRender = true;
                 }
             }
 
             locationPlaceholder = MapRasterTiles.getPixelPosition(latitude, longitude, beginTile.x, beginTile.y);
-            drawMarker(camera, locationPlaceholder, hasVeganTag, hasPizzaTag);
 
-            if (selectedRestaurant != null) {
+            if (
+                allTagsFalse
+                    || (hasMeatTag && tags.toString().contains("meso"))
+                    || (hasMixedTag && tags.toString().contains("mešano"))
+                    || (hasVegetereanTag && tags.toString().contains("vegetarijansko"))
+                    || (hasSaladTag && tags.toString().contains("solata"))
+                    || (hasSeaFoodTag && tags.toString().contains("morski-sadeži"))
+                    || (hasPizzaTag && tags.toString().contains("pizza"))
+                    || (hasFastFoodTag && tags.toString().contains("hitra-hrana"))
+                    || (hasCeliacFriendlyFoodTag && tags.toString().contains("celiakiji-prijazni-obroki"))
+            ) {
+                drawMarker(camera, locationPlaceholder, hasvegetereanTagForRender, hasPizzaTagForRender);
+            }
+
+            /*if (selectedRestaurant != null) {
                 drawPopUpWindow(selectedRestaurant, selectedRestaurantPosition);
             }
             else {
@@ -291,7 +491,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
                     window.remove();
                     window = null;
                 }
-            }
+            }*/
             /*stage.act(delta);
             stage.draw();*/
         }
@@ -345,12 +545,12 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             if (selectedRestaurant != null) {
                 drawPopUpWindow(selectedRestaurant, selectedRestaurantPosition);
             }
-            else {
+            /*else {
                 if (window != null) {
                     window.remove();
                     window = null;
                 }
-            }
+            }*/
             /*stage.act(delta);
             stage.draw();*/
         }
@@ -430,6 +630,19 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     public void resize(int width, int height) {
         viewport.update(width, height, true);
         hudViewport.update(width, height, true);
+
+        float displace = 10;
+
+        float buttonOnX = hudViewport.getWorldWidth() - toggleWindowOn.getWidth() - displace;
+        float buttonOnY = (hudViewport.getWorldHeight() - toggleWindowOn.getHeight()) / 2;
+        float buttonOffX = hudViewport.getWorldWidth() - toggleWindowOff.getWidth() - displace;
+        float buttonOffY = (hudViewport.getWorldHeight() - toggleWindowOff.getHeight()) / 2;
+        toggleWindowOn.setPosition(buttonOnX, buttonOnY);
+        toggleWindowOff.setPosition(buttonOffX, buttonOffY);
+
+        float windowX = hudViewport.getWorldWidth() - window.getWidth() - toggleWindowOn.getWidth() - 2 * displace;
+        float windowY = (hudViewport.getWorldHeight() - window.getHeight()) / 2;
+        window.setPosition(windowX, windowY);
     }
 
     @Override
