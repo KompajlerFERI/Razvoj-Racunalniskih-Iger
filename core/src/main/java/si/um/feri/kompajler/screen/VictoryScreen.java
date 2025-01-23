@@ -24,6 +24,8 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import si.um.feri.kompajler.DigitalniDvojcek;
 import si.um.feri.kompajler.assets.AssetDescriptors;
 import si.um.feri.kompajler.assets.AssetPaths;
+import si.um.feri.kompajler.config.GameConfig;
+import si.um.feri.kompajler.gameplay.GameManager;
 
 public class VictoryScreen implements Screen {
     private DigitalniDvojcek game;
@@ -34,9 +36,9 @@ public class VictoryScreen implements Screen {
     private Viewport viewport;
     private Skin skin;
     private Stage stage;
-    private int winner;
+    private String winner;
 
-    public VictoryScreen(DigitalniDvojcek game, int winner) {
+    public VictoryScreen(DigitalniDvojcek game, String winner) {
         this.game = game;
         this.assetManager = game.getAssetManager();
         this.skin = assetManager.get(AssetDescriptors.UI_SKIN_NEON);
@@ -45,14 +47,15 @@ public class VictoryScreen implements Screen {
 
     @Override
     public void show() {
-        if (winner == 0) {
+        if (winner.equals("GREEN")) {
             screenTexture = new Texture(AssetPaths.WINNER_TEXTURE_GREEN);
-        } else if (winner == 1) {
+        }
+        else if (winner.equals("RED")) {
             screenTexture = new Texture(AssetPaths.WINNER_TEXTURE_RED);
         }
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
-        viewport = new FitViewport(1280, 960, camera);
+        viewport = new FitViewport(GameConfig.HUD_WIDTH, GameConfig.HUD_HEIGHT, camera);
         viewport.apply();
         camera.position.set(camera.viewportWidth / 2, camera.viewportHeight / 2, 0);
 
@@ -71,6 +74,7 @@ public class VictoryScreen implements Screen {
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1); // Set clear color to black
+        handleInput();
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); // Clear the screen
 
         camera.update();
@@ -81,6 +85,12 @@ public class VictoryScreen implements Screen {
 
         stage.act(delta);
         stage.draw();
+    }
+
+    private void handleInput() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+            game.setScreen(new MapScreen(game, null));
+        }
     }
 
     @Override

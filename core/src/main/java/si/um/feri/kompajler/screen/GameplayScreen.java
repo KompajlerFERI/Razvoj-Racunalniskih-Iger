@@ -25,6 +25,8 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+import java.util.Objects;
+
 import si.um.feri.kompajler.DigitalniDvojcek;
 import si.um.feri.kompajler.config.GameConfig;
 import si.um.feri.kompajler.DigitalniDvojcek;
@@ -72,9 +74,13 @@ public class GameplayScreen implements Screen {
     private MapBoundsHandlerPlayer mapBoundsHandlerPlayer;
     private MapBoundsHandlerBullet mapBoundsHandlerBullet;
 
-    public GameplayScreen(DigitalniDvojcek game) {
+    public GameplayScreen(DigitalniDvojcek game, String player2Username, String player1Username) {
         this.game = game;
         assetManager = game.getAssetManager();
+        if (!Objects.equals(player1Username, "") && !Objects.equals(player2Username, "")) {
+            this.player1Username = player1Username;
+            this.player2Username = player2Username;
+        }
     }
 
     @Override
@@ -146,17 +152,18 @@ public class GameplayScreen implements Screen {
     }
 
     public void update(float delta) {
-        if (GameManager.getInstance().getHighestPlayerScore() == 7) {
-            GameManager.getInstance().resetPlayerScores();
+        if (GameManager.getInstance().getHighestPlayerScore() == 3) {
             int id = GameManager.getInstance().getWinningPlayer();
-            GameManager.getInstance().winner = (id == 0) ? 1 : 0;
+            GameManager.getInstance().resetPlayerScores();
+            String winner = (id == 0) ? "GREEN" : "RED";
+            GameManager.getInstance().winner = winner;
 
             // Clear bullets and players
             GameManager.getInstance().bullets.clear();
             GameManager.getInstance().players.clear();
 
             // Set screen to VictoryScreen
-            game.setScreen(new VictoryScreen(game, GameManager.getInstance().winner));
+            game.setScreen(new VictoryScreen(game, winner));
             return;
         }
 
