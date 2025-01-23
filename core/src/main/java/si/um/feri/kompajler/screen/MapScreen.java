@@ -19,16 +19,12 @@ import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
-import com.badlogic.gdx.math.Bezier;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.actions.TemporalAction;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
@@ -36,6 +32,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
@@ -46,7 +43,6 @@ import si.um.feri.kompajler.DigitalniDvojcek;
 import si.um.feri.kompajler.assets.AssetDescriptors;
 import si.um.feri.kompajler.assets.AssetPaths;
 import si.um.feri.kompajler.config.GameConfig;
-import si.um.feri.kompajler.gameplay.GameManager;
 import si.um.feri.kompajler.utils.ApiHelper;
 import si.um.feri.kompajler.utils.Constants;
 import si.um.feri.kompajler.utils.Geolocation;
@@ -86,13 +82,20 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     JSONArray restaurants = null;
     Vector2 locationPlaceholder = null;
 
-    Texture texture_normal, texture_vegan, texture_pizza, texture_pizzanvegan, personTexture, restaurantDefaultTexture, pizzeriaTexture, fastFoodRestaurantTexture;
+    Texture texture_normal, texture_vegan, texture_pizza, texture_pizzanvegan, personTexture, restaurantDefaultTexture, pizzeriaTexture, fastFoodRestaurantTexture, exclamationTexture;
+
+    Actor exclamationActor;
     Skin skin;
     Window window;
     InfoScreen infoScreen;
 
     private JSONObject selectedRestaurant = null;
     private Vector2 selectedRestaurantPosition = null;
+    private boolean isPanning = false;
+    private float startX, startY, startZoom;
+    private float targetX, targetY, targetZoom;
+    private float duration = 0.5f; // 2 seconds for the transition
+    private long startTime;
 
     public MapScreen(DigitalniDvojcek game, MapScreen mapFromBefore) {
         this.game = game;
@@ -113,7 +116,6 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         skin = assetManager.get(AssetDescriptors.UI_SKIN);
 
         stage = new Stage(viewport, batch);
-        /*stage.addActor(createCrowdAnimation());*/
 
         window = null;
         /*infoScreen = new InfoScreen(game, selectedRestaurant, this);*/
@@ -131,6 +133,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         restaurantDefaultTexture = new Texture("map_screen/restaurant_normal.png");
         pizzeriaTexture = new Texture("map_screen/restaurant_pizza.png");
         fastFoodRestaurantTexture = new Texture("map_screen/restaurant_burger.png");
+        exclamationTexture = new Texture("map_screen/exclamation.png");
 
         try {
             //in most cases, geolocation won't be in the center of the tile because tile borders are predetermined (geolocation can be at the corner of a tile)
@@ -193,6 +196,10 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
     public void update(float delta) {
         handleInput();
+
+        if (isPanning) {
+            updateCamera(delta);
+        }
 
         camera.update();
     }
@@ -439,6 +446,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         restaurantDefaultTexture.dispose();
         pizzeriaTexture.dispose();
         fastFoodRestaurantTexture.dispose();
+        exclamationTexture.dispose();
     }
 
     @Override
@@ -602,6 +610,9 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
             camera.translate(0, Constants.CAMERA_MOVEMENT_SPEED * camera.zoom, 0);
         }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
+            priceChange();
+        }
 
         float effectiveViewportWidth = camera.viewportWidth * camera.zoom;
         float effectiveViewportHeight = camera.viewportHeight * camera.zoom;
@@ -672,5 +683,73 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         });
 
         restaurants = new JSONArray(restaurantList);
+    }
+
+    private void priceChange() {
+        if (restaurants != null && restaurants.length() > 0) {
+            JSONObject restaurant = restaurants.getJSONObject(24); // Pan to the first restaurant
+            double lat = restaurant.getJSONObject("location").getJSONArray("coordinates").getDouble(1);
+            double lon = restaurant.getJSONObject("location").getJSONArray("coordinates").getDouble(0);
+
+            // Convert lat/lon to world coordinates
+            Vector2 targetPosition = MapRasterTiles.getPixelPosition(lat, lon, beginTile.x, beginTile.y);
+
+            startPanningTo(targetPosition.x, targetPosition.y, 0.6f);
+            stage.addActor(createExclamation(targetPosition.x - 10, targetPosition.y + 30));
+        }
+    }
+
+    private void startPanningTo(float x, float y, float zoom) {
+        startX = camera.position.x;
+        startY = camera.position.y;
+        startZoom = camera.zoom;
+        targetX = x;
+        targetY = y;
+        targetZoom = zoom;
+        startTime = TimeUtils.millis();
+        isPanning = true;
+    }
+
+    private Actor createExclamation(float x, float y) {
+        Image exclamationImage = new Image(exclamationTexture);
+        exclamationImage.setPosition(x, y);
+        exclamationImage.setScale(0.3f);
+        exclamationImage.setVisible(false);
+
+        exclamationImage.addAction(
+            Actions.sequence(
+                Actions.delay(duration),
+                Actions.show(),
+                Actions.sequence(
+                    Actions.moveBy(2, 0, 0.1f), // Move right
+                    Actions.moveBy(-4, 0, 0.1f), // Move left
+                    Actions.moveBy(4, 0, 0.1f), // Move right
+                    Actions.moveBy(-2, 0, 0.1f),  // Move left
+                    Actions.moveBy(1, 0, 0.1f), // Move right
+                    Actions.moveBy(-1, 0, 0.1f)  // Move left
+                ),
+                Actions.delay(0.5f),
+                Actions.removeActor()
+            )
+        );
+
+        return exclamationImage;
+    }
+
+    private void updateCamera(float delta) {
+        float elapsed = (TimeUtils.millis() - startTime) / 1000f;
+        float progress = Math.min(elapsed / duration, 1f); // Clamp progress to 1
+
+        // Interpolate position and zoom
+        camera.position.x = startX + (targetX - startX) * progress;
+        camera.position.y = startY + (targetY - startY) * progress;
+        camera.zoom = startZoom + (targetZoom - startZoom) * progress;
+
+        camera.update();
+
+        // Stop panning when the animation is complete
+        if (progress >= 1f) {
+            isPanning = false;
+        }
     }
 }
