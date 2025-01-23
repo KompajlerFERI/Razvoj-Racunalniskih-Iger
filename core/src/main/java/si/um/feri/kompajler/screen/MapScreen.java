@@ -6,7 +6,6 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -25,6 +24,8 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -41,6 +42,7 @@ import org.json.JSONObject;
 import si.um.feri.kompajler.DigitalniDvojcek;
 import si.um.feri.kompajler.assets.AssetDescriptors;
 import si.um.feri.kompajler.assets.AssetPaths;
+import si.um.feri.kompajler.config.GameConfig;
 import si.um.feri.kompajler.utils.ApiHelper;
 import si.um.feri.kompajler.utils.Constants;
 import si.um.feri.kompajler.utils.Geolocation;
@@ -54,18 +56,22 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     private final DigitalniDvojcek game;
     private ShapeRenderer shapeRenderer;
     private Vector3 touchPosition;
-    private Stage stage;
 
     public MapScreen mapFromBefore;
     public boolean fromBefore = false;
 
     private TiledMap tiledMap;
     private TiledMapRenderer tiledMapRenderer;
-    private OrthographicCamera camera;
     private SpriteBatch batch;
-    private Viewport viewport;
     private AssetManager assetManager;
-    private TextureAtlas gameAtlas;
+
+    private OrthographicCamera camera;
+    private Viewport viewport;
+
+    private OrthographicCamera cameraHud;
+    private Viewport viewportHud;
+    private Stage stage;
+    boolean toggleWindow = false;
 
     private Texture[] mapTiles;
     private ZoomXY beginTile;   // top left tile
@@ -80,14 +86,15 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     Texture texture_normal, texture_vegeterean, texture_pizza, texture_pizzanvegeterean;
     Skin skin;
     InfoScreen infoScreen;
-    Table table;
+    Window window;
+    Button toggleWindowOff, toggleWindowOn;
 
     private JSONObject selectedRestaurant = null;
     private Vector2 selectedRestaurantPosition = null;
 
     boolean hasMeatTag = false,
         hasMixedTag = false,
-        hasvegetereanTag = false,
+        hasVegetereanTag = false,
         hasSaladTag = false,
         hasSeaFoodTag = false,
         hasPizzaTag = false,
@@ -101,20 +108,30 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     public MapScreen(DigitalniDvojcek game, MapScreen mapFromBefore) {
         this.game = game;
         this.mapFromBefore = mapFromBefore;
+        this.assetManager = game.assetManager;
     }
 
     @Override
     public void show() {
         if (mapFromBefore == null) {
+            batch = game.getBatch();
+
             shapeRenderer = new ShapeRenderer();
-            batch = new SpriteBatch();
             this.camera = new OrthographicCamera();
-            viewport = new FitViewport(800, 800, camera);
+            viewport = new FitViewport(GameConfig.getWidth(), GameConfig.getHeight(), camera);
             camera.viewportWidth = Constants.MAP_WIDTH / 2f;
             camera.viewportHeight = Constants.MAP_HEIGHT / 2f;
             camera.setToOrtho(false, Constants.MAP_WIDTH, Constants.MAP_HEIGHT);
             camera.position.set(Constants.MAP_WIDTH / 2f, Constants.MAP_HEIGHT / 2f, 0);
             camera.zoom = 2f;
+
+            this.cameraHud = new OrthographicCamera();
+            viewportHud = new FitViewport(GameConfig.getHeight(), GameConfig.getHeight(), cameraHud);
+            cameraHud.viewportWidth = Constants.MAP_WIDTH / 2f;
+            cameraHud.viewportHeight = Constants.MAP_HEIGHT / 2f;
+            cameraHud.setToOrtho(false, Constants.MAP_WIDTH, Constants.MAP_HEIGHT);
+            cameraHud.position.set(Constants.MAP_WIDTH / 2f, Constants.MAP_HEIGHT / 2f, 0);
+            batch.setProjectionMatrix(cameraHud.combined);
         }
         else {
             this.camera = mapFromBefore.camera;
@@ -138,11 +155,9 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             this.selectedRestaurant = mapFromBefore.selectedRestaurant;
             this.selectedRestaurantPosition = mapFromBefore.selectedRestaurantPosition;
         }
-        camera.update();
-        assetManager = game.assetManager;
         skin = assetManager.get(AssetDescriptors.UI_SKIN);
 
-        stage = new Stage(viewport, batch);
+        stage = new Stage(viewportHud, batch);
         infoScreen = new InfoScreen(game, selectedRestaurant, this);
 
         touchPosition = new Vector3();
@@ -189,23 +204,31 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             e.printStackTrace();
         }
 
+        toggleWindowOn = new Button(skin, "left");
+        toggleWindowOff = new Button(skin, "right");
+        toggleWindowOn.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                toggleWindow = true;
+                toggleWindowOn.setVisible(false);
+                toggleWindowOff.setVisible(true);
+                window.setVisible(true);
+            }
+        });
+        toggleWindowOff.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                toggleWindow = false;
+                toggleWindowOn.setVisible(true);
+                toggleWindowOff.setVisible(false);
+                window.setVisible(false);
+            }
+        });
+        stage.addActor(toggleWindowOn);
+        stage.addActor(toggleWindowOff);
 
-
-
-        Window window = new Window("Filter", skin);
-        float windowWidth = 200 * camera.zoom;
-        float windowHeight = 200 * camera.zoom;
-        window.setSize(windowWidth, windowHeight);
-        window.setPosition(0, 0);
-        window.setMovable(false);
-        window.setResizable(false);
-
-        table = createTableWithButtons();
-
-        window.add(table);
-
+        window = createTableWithButtons();
         stage.addActor(window);
-        //stage.addActor(table);
 
         GestureDetector gestureDetector = new GestureDetector(this);
         InputMultiplexer inputMultiplexer = new InputMultiplexer();
@@ -220,6 +243,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         ScreenUtils.clear(0, 0, 0, 1);
         handleInput();
         camera.update();
+        cameraHud.update();
         tiledMapRenderer.setView(camera);
         tiledMapRenderer.render();
 
@@ -248,7 +272,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
                 allTagsFalse
                 || (hasMeatTag && tags.toString().contains("meso"))
                 || (hasMixedTag && tags.toString().contains("mešano"))
-                || (hasvegetereanTag && tags.toString().contains("vegetarijansko"))
+                || (hasVegetereanTag && tags.toString().contains("vegetarijansko"))
                 || (hasSaladTag && tags.toString().contains("solata"))
                 || (hasSeaFoodTag && tags.toString().contains("morski-sadeži"))
                 || (hasPizzaTag && tags.toString().contains("pizza"))
@@ -265,8 +289,21 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
 
     @Override
     public void resize(int width, int height) {
-        viewport.update(width, height);
+        viewport.update(width, height, true);
         stage.getViewport().update(width, height, true);
+
+        float displace = 10;
+
+        float buttonOnX = viewportHud.getWorldWidth() - toggleWindowOn.getWidth() - displace;
+        float buttonOnY = (viewportHud.getWorldHeight() - toggleWindowOn.getHeight()) / 2;
+        float buttonOffX = viewportHud.getWorldWidth() - toggleWindowOff.getWidth() - displace;
+        float buttonOffY = (viewportHud.getWorldHeight() - toggleWindowOff.getHeight()) / 2;
+        toggleWindowOn.setPosition(buttonOnX, buttonOnY);
+        toggleWindowOff.setPosition(buttonOffX, buttonOffY);
+
+        float windowX = viewportHud.getWorldWidth() - window.getWidth() - toggleWindowOn.getWidth() - 2 * displace;
+        float windowY = (viewportHud.getWorldHeight() - window.getHeight()) / 2;
+        window.setPosition(windowX, windowY);
     }
 
     @Override
@@ -309,134 +346,134 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         spriteBatch.end();
     }
 
+    private Window createTableWithButtons() {
+        Window newWindow = new Window("Filter", skin);
+        float newWindowWidth = 240;
+        float newWindowHeight = 350;
+        newWindow.setSize(newWindowWidth, newWindowHeight);
+        newWindow.setPosition((viewportHud.getWorldWidth() - newWindowWidth) / 2, (viewportHud.getWorldHeight() - newWindowHeight) / 2);
+        newWindow.setMovable(false);
+        newWindow.setResizable(false);
 
-
-    private Table createTableWithButtons() {
         Table newTable = new Table();
         newTable.top().left();
-        newTable.padTop(52);
+        newTable.padTop(84);
         newTable.setFillParent(true);
 
         Label meatLabel = new Label("Meso:", skin);
-        TextButton meatButton = new TextButton("OFF", skin);
-        meatButton.addListener(new ChangeListener() {
+        CheckBox meatCheckBox = new CheckBox("", skin, "switch");
+        meatCheckBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                hasMeatTag = !hasMeatTag;
-                meatButton.setText(hasMeatTag ? "ON" : "OFF");
+                hasMeatTag = meatCheckBox.isChecked();
                 checkIfAllTagsAreFalse();
             }
         });
         newTable.row().left();
         newTable.add(meatLabel).padRight(10);
-        newTable.add(meatButton);
+        newTable.add(meatCheckBox);
 
         Label mixedLabel = new Label("Mešano:", skin);
-        TextButton mixedButton = new TextButton("OFF", skin);
-        mixedButton.addListener(new ChangeListener() {
+        CheckBox mixedCheckBox = new CheckBox("", skin, "switch");
+        mixedCheckBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                hasMixedTag = !hasMixedTag;
-                mixedButton.setText(hasMixedTag ? "ON" : "OFF");
+                hasMixedTag = mixedCheckBox.isChecked();
                 checkIfAllTagsAreFalse();
             }
         });
         newTable.row().left().padTop(10);
         newTable.add(mixedLabel).padRight(10);
-        newTable.add(mixedButton);
+        newTable.add(mixedCheckBox);
 
         Label vegetereanLabel = new Label("Vegetarjansko:", skin);
-        TextButton vegetereanButton = new TextButton("OFF", skin);
-        vegetereanButton.addListener(new ChangeListener() {
+        CheckBox vegetereanCheckBox = new CheckBox("", skin, "switch");
+        vegetereanCheckBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                hasvegetereanTag = !hasvegetereanTag;
-                vegetereanButton.setText(hasvegetereanTag ? "ON" : "OFF");
+                hasVegetereanTag = vegetereanCheckBox.isChecked();
                 checkIfAllTagsAreFalse();
             }
         });
         newTable.row().left().padTop(10);
         newTable.add(vegetereanLabel).padRight(10);
-        newTable.add(vegetereanButton);
+        newTable.add(vegetereanCheckBox);
 
         Label saladLabel = new Label("Solata:", skin);
-        TextButton saladButton = new TextButton("OFF", skin);
-        saladButton.addListener(new ChangeListener() {
+        CheckBox saladCheckBox = new CheckBox("", skin, "switch");
+        saladCheckBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                hasSaladTag = !hasSaladTag;
-                saladButton.setText(hasSaladTag ? "ON" : "OFF");
+                hasSaladTag = saladCheckBox.isChecked();
                 checkIfAllTagsAreFalse();
             }
         });
         newTable.row().left().padTop(10);
         newTable.add(saladLabel).padRight(10);
-        newTable.add(saladButton);
+        newTable.add(saladCheckBox);
 
-        Label seaFoodLabel = new Label("seaFood:", skin);
-        TextButton seaFoodButton = new TextButton("OFF", skin);
-        seaFoodButton.addListener(new ChangeListener() {
+        Label seaFoodLabel = new Label("Morska hrana:", skin);
+        CheckBox seaFoodCheckBox = new CheckBox("", skin, "switch");
+        seaFoodCheckBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                hasPizzaTag = !hasPizzaTag;
-                seaFoodButton.setText(hasPizzaTag ? "ON" : "OFF");
+                hasPizzaTag = seaFoodCheckBox.isChecked();
                 checkIfAllTagsAreFalse();
             }
         });
         newTable.row().left().padTop(10);
         newTable.add(seaFoodLabel).padRight(10);
-        newTable.add(seaFoodButton);
+        newTable.add(seaFoodCheckBox);
 
-        Label pizzaLabel = new Label("pizza:", skin);
-        TextButton pizzaButton = new TextButton("OFF", skin);
-        pizzaButton.addListener(new ChangeListener() {
+        Label pizzaLabel = new Label("Pica:", skin);
+        CheckBox pizzaCheckBox = new CheckBox("", skin, "switch");
+        pizzaCheckBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                hasPizzaTag = !hasPizzaTag;
-                pizzaButton.setText(hasPizzaTag ? "ON" : "OFF");
+                hasPizzaTag = pizzaCheckBox.isChecked();
                 checkIfAllTagsAreFalse();
             }
         });
         newTable.row().left().padTop(10);
         newTable.add(pizzaLabel).padRight(10);
-        newTable.add(pizzaButton);
+        newTable.add(pizzaCheckBox);
 
-        Label fastFoodLabel = new Label("fastFood:", skin);
-        TextButton fastFoodButton = new TextButton("OFF", skin);
-        fastFoodButton.addListener(new ChangeListener() {
+        Label fastFoodLabel = new Label("Hitra hrana:", skin);
+        CheckBox fastFoodCheckBox = new CheckBox("", skin, "switch");
+        fastFoodCheckBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                hasFastFoodTag = !hasFastFoodTag;
-                fastFoodButton.setText(hasFastFoodTag ? "ON" : "OFF");
+                hasFastFoodTag = fastFoodCheckBox.isChecked();
                 checkIfAllTagsAreFalse();
             }
         });
         newTable.row().left().padTop(10);
         newTable.add(fastFoodLabel).padRight(10);
-        newTable.add(fastFoodButton);
+        newTable.add(fastFoodCheckBox);
 
         Label celiakLabel = new Label("Celiakiji\nprijazni obroki:", skin);
-        TextButton celiakButton = new TextButton("OFF", skin);
-        celiakButton.addListener(new ChangeListener() {
+        CheckBox celiakCheckBox = new CheckBox("", skin, "switch");
+        celiakCheckBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                hasCeliacFriendlyFoodTag = !hasCeliacFriendlyFoodTag;
-                celiakButton.setText(hasCeliacFriendlyFoodTag ? "ON" : "OFF");
+                hasCeliacFriendlyFoodTag = celiakCheckBox.isChecked();
                 checkIfAllTagsAreFalse();
             }
         });
         newTable.row().left().padTop(10);
         newTable.add(celiakLabel).padRight(10);
-        newTable.add(celiakButton);
+        newTable.add(celiakCheckBox);
 
-        return newTable;
+        newWindow.add(newTable);
+
+        return newWindow;
     }
 
     private void checkIfAllTagsAreFalse() {
         if (
             hasMeatTag
                 || hasMixedTag
-                || hasvegetereanTag
+                || hasVegetereanTag
                 || hasSaladTag
                 || hasSeaFoodTag
                 || hasPizzaTag
@@ -458,7 +495,6 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     public boolean touchDown(float x, float y, int pointer, int button) {
         return false;
     }
-
 
     // RETURNS IN WORLD UNITS
     @Override
