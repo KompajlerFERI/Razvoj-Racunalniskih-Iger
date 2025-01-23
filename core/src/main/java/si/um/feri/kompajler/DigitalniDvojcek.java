@@ -32,7 +32,6 @@ public class DigitalniDvojcek extends Game {
 
     @Override
     public void create() {
-        MqttConfig.getInstance().startMqttClient();
         batch = new SpriteBatch();
 
         assetManager = new AssetManager();

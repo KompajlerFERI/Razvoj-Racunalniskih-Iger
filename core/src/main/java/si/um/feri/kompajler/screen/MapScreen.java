@@ -2,6 +2,7 @@ package si.um.feri.kompajler.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
@@ -25,6 +26,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
@@ -33,6 +35,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
@@ -43,6 +46,7 @@ import si.um.feri.kompajler.DigitalniDvojcek;
 import si.um.feri.kompajler.assets.AssetDescriptors;
 import si.um.feri.kompajler.assets.AssetPaths;
 import si.um.feri.kompajler.config.GameConfig;
+import si.um.feri.kompajler.config.MqttConfig;
 import si.um.feri.kompajler.utils.ApiHelper;
 import si.um.feri.kompajler.utils.Constants;
 import si.um.feri.kompajler.utils.Geolocation;
@@ -54,6 +58,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 
 public class MapScreen implements Screen, GestureDetector.GestureListener {
@@ -61,6 +66,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     private ShapeRenderer shapeRenderer;
     private Vector3 touchPosition;
     private Stage stage;
+    private Stage hudStage;
 
     public MapScreen mapFromBefore;
     public boolean fromBefore = false;
@@ -70,6 +76,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     private OrthographicCamera camera;
     private SpriteBatch batch;
     private Viewport viewport;
+    private Viewport hudViewport;
     private AssetManager assetManager;
     private TextureAtlas gameAtlas;
 
@@ -87,7 +94,9 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
     Actor exclamationActor;
     Skin skin;
     Window window;
-    InfoScreen infoScreen;
+    /*InfoScreen infoScreen;*/
+
+    private MqttConfig mqttConfig;
 
     private JSONObject selectedRestaurant = null;
     private Vector2 selectedRestaurantPosition = null;
@@ -109,6 +118,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         viewport = new FitViewport(GameConfig.HUD_WIDTH, GameConfig.HUD_HEIGHT, camera);
         camera.zoom = Constants.MAX_CAMERA_ZOOM;
 
+
         batch = game.getBatch();
         shapeRenderer = new ShapeRenderer();
 
@@ -121,7 +131,6 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         /*infoScreen = new InfoScreen(game, selectedRestaurant, this);*/
 
         GestureDetector gestureDetector = new GestureDetector(this);
-        Gdx.input.setInputProcessor(gestureDetector);
 
         touchPosition = new Vector3();
         // vem da naj bi z asset managerjem delal
@@ -192,6 +201,18 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
                 stage.addActor(createWanderingPerson(temp.x, temp.y));
             }
         }
+
+        hudViewport = new FitViewport(GameConfig.HUD_WIDTH, GameConfig.HUD_HEIGHT);
+        hudStage = new Stage(hudViewport);
+
+        InputMultiplexer inputMultiplexer = new InputMultiplexer();
+        inputMultiplexer.addProcessor(hudStage);
+        inputMultiplexer.addProcessor(gestureDetector);
+
+        Gdx.input.setInputProcessor(inputMultiplexer);
+
+        mqttConfig = new MqttConfig(this);
+        mqttConfig.startMqttClient();
     }
 
     public void update(float delta) {
@@ -219,6 +240,9 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             stage.act(delta);
             stage.draw();
         }
+
+        hudStage.act(delta);
+        hudStage.draw();
     }
 
     public void draw() {
@@ -351,11 +375,9 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         batch.draw(texture, marker.x - pinWidth / 2, marker.y, pinWidth, pinHeight);
     }
 
-
-
     private void drawPopUpWindow(JSONObject restaurant, Vector2 position) {
-        float width = viewport.getScreenWidth();
-        float height = viewport.getScreenHeight() / 2;
+        float width = hudViewport.getScreenWidth() - 200;
+        float height = hudViewport.getScreenHeight() - 200;
 
         String name = restaurant.optString("name", "Unknown");
         String address = restaurant.optString("address", "No address available");
@@ -382,7 +404,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         }
 
         Table table = new Table();
-        table.defaults().pad(5 * camera.zoom);
+        /*table.defaults().pad(5 * camera.zoom);*/
         table.add(new Label(name, skin)).row();
         table.add(new Label("Address: " + address, skin)).row();
         table.add(new Label("Rating: " + averageRating, skin)).row();
@@ -401,38 +423,13 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         window.setPosition(newX, newY);
         window.add(scrollPane).fill().expand();
 
-        if (newX < 0) {
-            camera.position.set(GameConfig.getWidth() / 2 * camera.zoom, position.y + 100f, 0);
-            window.setPosition(GameConfig.getHeight() / 2 * camera.zoom - width / 2, newY);
-        }
-        else if (newX > GameConfig.getWidth()) {
-            camera.position.set(position.x - width, position.y - 100f, 0);
-            window.setPosition(position.x - width / 2, newY);
-        }
-        else {
-            camera.position.set(position.x, position.y - 100f, 0);
-        }
-        if (newY < 0) {
-            camera.position.set(GameConfig.getHeight() / 2 * camera.zoom, position.y + 100f, 0);
-            window.setPosition(newX, position.y + 100f - height / 2);
-        }
-        else if (newY > GameConfig.getHeight()) {
-            camera.position.set(camera.position.x, position.y - 100f, 0);
-            window.setPosition(newX, position.y - 100f - height / 2);
-        }
-        else {
-            camera.position.set(camera.position.x, position.y - 100f, 0);
-        }
-
-        camera.zoom = 0.5f;
-        camera.update();
-        stage.clear();
-        stage.addActor(window);
+        hudStage.addActor(window);
     }
 
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
+        hudViewport.update(width, height, true);
     }
 
     @Override
@@ -447,6 +444,8 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         pizzeriaTexture.dispose();
         fastFoodRestaurantTexture.dispose();
         exclamationTexture.dispose();
+        stage.dispose();
+        hudStage.dispose();
     }
 
     @Override
@@ -537,16 +536,6 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             camera.update();
             game.setScreen(new InfoScreen(game, selectedRestaurant, this));
         }
-        // else if (
-        //     window != null
-        //     && (tapX < window.getX()
-        //     || tapX > window.getX() + window.getWidth()
-        //     || tapY < window.getY()
-        //     || tapY > window.getY() + window.getHeight())
-        // ) {
-        //     selectedRestaurant = null;
-        //     selectedRestaurantPosition = null;
-        // }
 
         return true;
     }
@@ -611,7 +600,7 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
             camera.translate(0, Constants.CAMERA_MOVEMENT_SPEED * camera.zoom, 0);
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
-            priceChange();
+            priceChange("6669c5cc9445f501f7ab1ec1");
         }
 
         float effectiveViewportWidth = camera.viewportWidth * camera.zoom;
@@ -685,17 +674,24 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         restaurants = new JSONArray(restaurantList);
     }
 
-    private void priceChange() {
-        if (restaurants != null && restaurants.length() > 0) {
-            JSONObject restaurant = restaurants.getJSONObject(24); // Pan to the first restaurant
-            double lat = restaurant.getJSONObject("location").getJSONArray("coordinates").getDouble(1);
-            double lon = restaurant.getJSONObject("location").getJSONArray("coordinates").getDouble(0);
+    public void priceChange(String restaurantID) {
+        if(restaurants != null) {
+            for (int i = 0; i < restaurants.length(); i++) {
+                JSONObject restaurant = restaurants.getJSONObject(i);
+                String id = restaurant.getString("id");
 
-            // Convert lat/lon to world coordinates
-            Vector2 targetPosition = MapRasterTiles.getPixelPosition(lat, lon, beginTile.x, beginTile.y);
+                if (Objects.equals(id, restaurantID)) {
+                    String restaurantName = restaurant.getString("name");
+                    double lat = restaurant.getJSONObject("location").getJSONArray("coordinates").getDouble(1);
+                    double lon = restaurant.getJSONObject("location").getJSONArray("coordinates").getDouble(0);
 
-            startPanningTo(targetPosition.x, targetPosition.y, 0.6f);
-            stage.addActor(createExclamation(targetPosition.x - 10, targetPosition.y + 30));
+                    Vector2 targetPosition = MapRasterTiles.getPixelPosition(lat, lon, beginTile.x, beginTile.y);
+
+                    startPanningTo(targetPosition.x, targetPosition.y, 0.6f);
+                    stage.addActor(createExclamation(targetPosition.x - 10, targetPosition.y + 30));
+                    showDialogWithDelay(restaurantName, duration + 1.5f);
+                }
+            }
         }
     }
 
@@ -734,6 +730,29 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         );
 
         return exclamationImage;
+    }
+
+    private void showDialogWithDelay(String restaurantName, float delayInSeconds) {
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                // Call the dialog creation method after the delay
+                createPriceChangedDialog(restaurantName);
+            }
+        }, delayInSeconds); // Specify the delay in seconds
+    }
+
+    private Dialog createPriceChangedDialog(String restaurantName) {
+        Dialog dialog = new Dialog("Price Change", skin) {
+            @Override
+            protected void result(Object object) {
+                // Handle dialog result if needed
+            }
+        };
+        dialog.text("The price has changed for " + restaurantName);
+        dialog.button("OK", true);
+        dialog.show(hudStage);
+        return dialog;
     }
 
     private void updateCamera(float delta) {

@@ -8,6 +8,8 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
+import si.um.feri.kompajler.screen.MapScreen;
+
 public class MqttConfig {
 
     private static final String HOSTNAME = "fb8c9bba468848348cfa18678ea11f96.s1.eu.hivemq.cloud";
@@ -17,19 +19,15 @@ public class MqttConfig {
     private static MqttConfig instance;
     private MqttAsyncClient mqttClient;
 
-    private MqttConfig() {
+    private MapScreen mapScreen;
+
+    public MqttConfig(MapScreen mapScreen) {
+        this.mapScreen = mapScreen;
         try {
             mqttClient = new MqttAsyncClient("ssl://" + HOSTNAME + ":8883", CLIENT_ID, new MemoryPersistence());
         } catch (MqttException e) {
             throw new RuntimeException("Failed to create MQTT client", e);
         }
-    }
-
-    public static synchronized MqttConfig getInstance() {
-        if (instance == null) {
-            instance = new MqttConfig();
-        }
-        return instance;
     }
 
     public void startMqttClient() {
@@ -88,5 +86,6 @@ public class MqttConfig {
 
     private void showNotification(String restaurantId, String restaurantName) {
         System.out.println("Restaurant ID: " + restaurantId);
+        mapScreen.priceChange(restaurantId);
     }
 }
