@@ -17,7 +17,7 @@ public class GameManager {
     public Array<PlayerScore> playerScores;
     private static final List<float[]> validPositions = new ArrayList<>();
     private static final Random random = new Random();
-    public static int winner;
+    public String winner;
 
     static {
         validPositions.add(new float[]{1.5f, 1.5f});

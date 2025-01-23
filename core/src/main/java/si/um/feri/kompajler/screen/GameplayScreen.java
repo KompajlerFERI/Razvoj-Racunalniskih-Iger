@@ -146,17 +146,19 @@ public class GameplayScreen implements Screen {
     }
 
     public void update(float delta) {
-        if (GameManager.getInstance().getHighestPlayerScore() == 7) {
-            GameManager.getInstance().resetPlayerScores();
+        System.out.println("WINNING: " + GameManager.getInstance().getWinningPlayer());
+        if (GameManager.getInstance().getHighestPlayerScore() == 3) {
             int id = GameManager.getInstance().getWinningPlayer();
-            GameManager.getInstance().winner = (id == 0) ? 1 : 0;
+            GameManager.getInstance().resetPlayerScores();
+            String winner = (id == 0) ? "GREEN" : "RED";
+            GameManager.getInstance().winner = winner;
 
             // Clear bullets and players
             GameManager.getInstance().bullets.clear();
             GameManager.getInstance().players.clear();
 
             // Set screen to VictoryScreen
-            game.setScreen(new VictoryScreen(game, GameManager.getInstance().winner));
+            game.setScreen(new VictoryScreen(game, winner));
             return;
         }
 

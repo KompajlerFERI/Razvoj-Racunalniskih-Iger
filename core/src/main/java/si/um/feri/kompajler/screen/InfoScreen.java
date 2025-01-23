@@ -161,6 +161,17 @@ public class InfoScreen implements Screen {
         window.setPosition(0, 0);
         window.add(scrollPane).fill().expand();
 
+        // Game button to start a new game
+        TextButton gameButton = new TextButton("Game", skin);
+        gameButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                // Implement your game button logic here
+                System.out.println("Game button clicked");
+                game.setScreen(new PreGameplayScreen(game));
+            }
+        });
+
         // Back button to return to MapScreen
         TextButton backButton = new TextButton("Back", skin);
         backButton.addListener(new ClickListener() {
@@ -172,7 +183,9 @@ public class InfoScreen implements Screen {
             }
         });
 
-        // Add back button to stage
+        // Add buttons to the window
+        window.add(gameButton).bottom().left().pad(10);
+        window.row();
         window.add(backButton).bottom().left().pad(10);
         stage.addActor(window);
     }
