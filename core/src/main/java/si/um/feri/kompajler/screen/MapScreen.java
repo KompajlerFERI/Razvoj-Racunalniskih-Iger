@@ -200,129 +200,12 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         window.setMovable(false);
         window.setResizable(false);
 
-        // Create a table to hold the elements
-        table = new Table();
-        table.top().left();
-        table.pad(10);
-        table.setFillParent(true);
-
-        // Create the first label and button
-        Label meatLabel = new Label("Meso:", skin);
-        TextButton meatButton = new TextButton("OFF", skin);
-        meatButton.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                hasMeatTag = !hasMeatTag;
-                meatButton.setText(hasMeatTag ? "ON" : "OFF");
-                checkIfAllTagsAreFalse();
-            }
-        });
-        table.row().left();
-        table.add(meatLabel).padRight(10);
-        table.add(meatButton);
-
-        Label mixedLabel = new Label("Mešano:", skin);
-        TextButton mixedButton = new TextButton("OFF", skin);
-        mixedButton.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                hasMixedTag = !hasMixedTag;
-                mixedButton.setText(hasMixedTag ? "ON" : "OFF");
-                checkIfAllTagsAreFalse();
-            }
-        });
-        table.row().left().padTop(10);
-        table.add(mixedLabel).padRight(10);
-        table.add(mixedButton);
-
-        Label vegetereanLabel = new Label("Vegetarjansko:", skin);
-        TextButton vegetereanButton = new TextButton("OFF", skin);
-        vegetereanButton.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                hasvegetereanTag = !hasvegetereanTag;
-                vegetereanButton.setText(hasvegetereanTag ? "ON" : "OFF");
-                checkIfAllTagsAreFalse();
-            }
-        });
-        table.row().left().padTop(10);
-        table.add(vegetereanLabel).padRight(10);
-        table.add(vegetereanButton);
-
-        Label saladLabel = new Label("Solata:", skin);
-        TextButton saladButton = new TextButton("OFF", skin);
-        saladButton.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                hasSaladTag = !hasSaladTag;
-                saladButton.setText(hasSaladTag ? "ON" : "OFF");
-                checkIfAllTagsAreFalse();
-            }
-        });
-        table.row().left().padTop(10);
-        table.add(saladLabel).padRight(10);
-        table.add(saladButton);
-
-        Label seaFoodLabel = new Label("seaFood:", skin);
-        TextButton seaFoodButton = new TextButton("OFF", skin);
-        seaFoodButton.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                hasPizzaTag = !hasPizzaTag;
-                seaFoodButton.setText(hasPizzaTag ? "ON" : "OFF");
-                checkIfAllTagsAreFalse();
-            }
-        });
-        table.row().left().padTop(10);
-        table.add(seaFoodLabel).padRight(10);
-        table.add(seaFoodButton);
-
-        Label pizzaLabel = new Label("pizza:", skin);
-        TextButton pizzaButton = new TextButton("OFF", skin);
-        pizzaButton.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                hasPizzaTag = !hasPizzaTag;
-                pizzaButton.setText(hasPizzaTag ? "ON" : "OFF");
-                checkIfAllTagsAreFalse();
-            }
-        });
-        table.row().left().padTop(10);
-        table.add(pizzaLabel).padRight(10);
-        table.add(pizzaButton);
-
-        Label fastFoodLabel = new Label("fastFood:", skin);
-        TextButton fastFoodButton = new TextButton("OFF", skin);
-        fastFoodButton.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                hasFastFoodTag = !hasFastFoodTag;
-                fastFoodButton.setText(hasFastFoodTag ? "ON" : "OFF");
-                checkIfAllTagsAreFalse();
-            }
-        });
-        table.row().left().padTop(10);
-        table.add(fastFoodLabel).padRight(10);
-        table.add(fastFoodButton);
-
-        Label celiakLabel = new Label("Celiakiji\nprijazni obroki:", skin);
-        TextButton celiakButton = new TextButton("OFF", skin);
-        celiakButton.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                hasCeliacFriendlyFoodTag = !hasCeliacFriendlyFoodTag;
-                celiakButton.setText(hasCeliacFriendlyFoodTag ? "ON" : "OFF");
-                checkIfAllTagsAreFalse();
-            }
-        });
-        table.row().left().padTop(10);
-        table.add(celiakLabel).padRight(10);
-        table.add(celiakButton);
+        table = createTableWithButtons();
 
         window.add(table);
 
-        //stage.addActor(window);
-        stage.addActor(table);
+        stage.addActor(window);
+        //stage.addActor(table);
 
         GestureDetector gestureDetector = new GestureDetector(this);
         InputMultiplexer inputMultiplexer = new InputMultiplexer();
@@ -330,23 +213,6 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         inputMultiplexer.addProcessor(gestureDetector);
         Gdx.input.setInputProcessor(stage);
         Gdx.input.setInputProcessor(inputMultiplexer);
-    }
-
-    private void checkIfAllTagsAreFalse() {
-        if (
-            hasMeatTag
-                || hasMixedTag
-                || hasvegetereanTag
-                || hasSaladTag
-                || hasSeaFoodTag
-                || hasPizzaTag
-                || hasFastFoodTag
-                || hasCeliacFriendlyFoodTag
-        ) {
-            allTagsFalse = false;
-        } else {
-            allTagsFalse = true;
-        }
     }
 
     @Override
@@ -443,16 +309,144 @@ public class MapScreen implements Screen, GestureDetector.GestureListener {
         spriteBatch.end();
     }
 
-    private void createHud() {
 
+
+    private Table createTableWithButtons() {
+        Table newTable = new Table();
+        newTable.top().left();
+        newTable.padTop(52);
+        newTable.setFillParent(true);
+
+        Label meatLabel = new Label("Meso:", skin);
+        TextButton meatButton = new TextButton("OFF", skin);
+        meatButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasMeatTag = !hasMeatTag;
+                meatButton.setText(hasMeatTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left();
+        newTable.add(meatLabel).padRight(10);
+        newTable.add(meatButton);
+
+        Label mixedLabel = new Label("Mešano:", skin);
+        TextButton mixedButton = new TextButton("OFF", skin);
+        mixedButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasMixedTag = !hasMixedTag;
+                mixedButton.setText(hasMixedTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left().padTop(10);
+        newTable.add(mixedLabel).padRight(10);
+        newTable.add(mixedButton);
+
+        Label vegetereanLabel = new Label("Vegetarjansko:", skin);
+        TextButton vegetereanButton = new TextButton("OFF", skin);
+        vegetereanButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasvegetereanTag = !hasvegetereanTag;
+                vegetereanButton.setText(hasvegetereanTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left().padTop(10);
+        newTable.add(vegetereanLabel).padRight(10);
+        newTable.add(vegetereanButton);
+
+        Label saladLabel = new Label("Solata:", skin);
+        TextButton saladButton = new TextButton("OFF", skin);
+        saladButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasSaladTag = !hasSaladTag;
+                saladButton.setText(hasSaladTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left().padTop(10);
+        newTable.add(saladLabel).padRight(10);
+        newTable.add(saladButton);
+
+        Label seaFoodLabel = new Label("seaFood:", skin);
+        TextButton seaFoodButton = new TextButton("OFF", skin);
+        seaFoodButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasPizzaTag = !hasPizzaTag;
+                seaFoodButton.setText(hasPizzaTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left().padTop(10);
+        newTable.add(seaFoodLabel).padRight(10);
+        newTable.add(seaFoodButton);
+
+        Label pizzaLabel = new Label("pizza:", skin);
+        TextButton pizzaButton = new TextButton("OFF", skin);
+        pizzaButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasPizzaTag = !hasPizzaTag;
+                pizzaButton.setText(hasPizzaTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left().padTop(10);
+        newTable.add(pizzaLabel).padRight(10);
+        newTable.add(pizzaButton);
+
+        Label fastFoodLabel = new Label("fastFood:", skin);
+        TextButton fastFoodButton = new TextButton("OFF", skin);
+        fastFoodButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasFastFoodTag = !hasFastFoodTag;
+                fastFoodButton.setText(hasFastFoodTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left().padTop(10);
+        newTable.add(fastFoodLabel).padRight(10);
+        newTable.add(fastFoodButton);
+
+        Label celiakLabel = new Label("Celiakiji\nprijazni obroki:", skin);
+        TextButton celiakButton = new TextButton("OFF", skin);
+        celiakButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                hasCeliacFriendlyFoodTag = !hasCeliacFriendlyFoodTag;
+                celiakButton.setText(hasCeliacFriendlyFoodTag ? "ON" : "OFF");
+                checkIfAllTagsAreFalse();
+            }
+        });
+        newTable.row().left().padTop(10);
+        newTable.add(celiakLabel).padRight(10);
+        newTable.add(celiakButton);
+
+        return newTable;
     }
 
-    private void drawMarkers(Vector2 marker) {
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.setColor(Color.RED);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.circle(marker.x, marker.y, 10);
-        shapeRenderer.end();
+    private void checkIfAllTagsAreFalse() {
+        if (
+            hasMeatTag
+                || hasMixedTag
+                || hasvegetereanTag
+                || hasSaladTag
+                || hasSeaFoodTag
+                || hasPizzaTag
+                || hasFastFoodTag
+                || hasCeliacFriendlyFoodTag
+        ) {
+            allTagsFalse = false;
+        } else {
+            allTagsFalse = true;
+        }
     }
 
     @Override
