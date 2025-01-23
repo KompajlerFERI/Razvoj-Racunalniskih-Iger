@@ -61,40 +61,49 @@ public class InfoScreen implements Screen {
         stage = new Stage(viewport, batch);
         Gdx.input.setInputProcessor(stage);
 
+        int higestCount = 0;
         // Prepare restaurant data
         String name = restaurant.optString("name", "Unknown");
+        higestCount = getHigerCount(higestCount, name);
         String id = restaurant.optString("id", "Unknown");
         String address = restaurant.optString("address", "No address available");
+        higestCount = getHigerCount(higestCount, address);
         float averageRating = restaurant.optFloat("averageRating", 0);
 
         // Working hours and tags data
         JSONArray workingHours = restaurant.optJSONArray("workingHours");
         JSONArray tags = restaurant.optJSONArray("tags");
 
-        String workingHoursTitle = "Working Hours:";
+        String workingHoursTitle = "Delovne ure:";
+        higestCount = getHigerCount(higestCount, workingHoursTitle);
         StringBuilder workingHoursText = new StringBuilder();
+        StringBuilder line = new StringBuilder();
         if (workingHours != null) {
             for (int i = 0; i < workingHours.length(); i++) {
                 JSONObject day = workingHours.getJSONObject(i);
+                line.append(day.optString("day")).append(": ").append(day.optString("open")).append(" - ")
+                    .append(day.optString("close"));
                 if (i == workingHours.length() - 1) {
-                    workingHoursText.append("      ").append(day.optString("day")).append(": ")
+                    workingHoursText.append("|     ").append(day.optString("day")).append(": ")
                         .append(day.optString("open")).append(" - ")
                         .append(day.optString("close"));
                 } else {
-                    workingHoursText.append("      ").append(day.optString("day")).append(": ")
+                    workingHoursText.append("|     ").append(day.optString("day")).append(": ")
                         .append(day.optString("open")).append(" - ")
                         .append(day.optString("close")).append("\n");
                 }
+                higestCount = getHigerCount(higestCount, line.toString());
+                line.setLength(0);
             }
         }
 
-        StringBuilder tagsText = new StringBuilder("Tags:\n      ");
+        StringBuilder tagsText = new StringBuilder("Oznake:\n|     ");
         if (tags != null) {
             for (int i = 0; i < tags.length(); i++) {
                 tagsText.append(tags.getJSONObject(i).optString("name"));
                 if (i < tags.length() - 1) {
                     if ((i + 1) % 3 == 0) {
-                        tagsText.append("\n      ");
+                        tagsText.append("\n|     ");
                     } else {
                         tagsText.append(", ");
                     }
@@ -110,22 +119,30 @@ public class InfoScreen implements Screen {
             System.out.println("Failed to fetch data from the API.");
         }
 
-        StringBuilder menuDetails = new StringBuilder("Menus:\n       ");
+        StringBuilder menuDetails = new StringBuilder("Menus:\n");
+        higestCount = getHigerCount(higestCount, menuDetails.toString());
         menus = new JSONArray(jsonResponse);
 
+        String dish = "";
+        StringBuilder sides = new StringBuilder();
         for (int i = 0; i < menus.length(); i++) {
             JSONObject menu = menus.getJSONObject(i);
             if (menu.optString("restaurant").equals(id)) {
-                String dish = menu.optString("dish");
+                dish = menu.optString("dish");
+                higestCount = getHigerCount(higestCount, dish);
                 JSONArray sideDishes = menu.optJSONArray("sideDishes");
-                StringBuilder sides = new StringBuilder();
+                sides = new StringBuilder();
                 for (int j = 0; j < sideDishes.length(); j++) {
                     sides.append(sideDishes.getString(j));
-                    if (j < sideDishes.length() - 1) sides.append(", \n          ");
+                    if (j < sideDishes.length() - 1) {
+                        sides.append(", ");
+                    }
                 }
-                menuDetails.append(String.format("%s\n          Side Dishes: %s\n       ", dish, sides.toString()));
+                menuDetails.append(String.format(buildLine(higestCount) + "\n|     %s\n|     Priloga: %s\n ", dish, sides.toString()));
+                higestCount = getHigerCount(higestCount, "Priloga: ".length() + sides.toString());
             }
         }
+        menuDetails.append(String.format(buildLine(higestCount) + "\n|     %s\n|     Priloga: %s ", dish, sides.toString()));
 
 
         Label.LabelStyle labelStyle = new Label.LabelStyle(game.assetManager.get(AssetDescriptors.SS_TEXT), Color.WHITE);
@@ -140,15 +157,22 @@ public class InfoScreen implements Screen {
 
         Table table = new Table();
         table.defaults().pad(5 * camera.zoom);
-        labelStyle.font.getData().setScale(0.6f);
         table.add(new Label(name, labelStyle)).left().row();
+
+        table.add(new Label(buildLine(higestCount), labelStyle)).left().row();
+        labelStyle.font.getData().setScale(1.2f);
+        table.add(new Label("|  Naslov: " + address, labelStyle)).left().row();
         labelStyle.font.getData().setScale(0.4f);
-        table.add(new Label("   Address: " + address, labelStyle)).left().row();
-        table.add(new Label("   Rating: " + averageRating, labelStyle)).left().row();
-        table.add(new Label("   " + workingHoursTitle, labelStyle)).left().row();
+        table.add(new Label(buildLine(higestCount), labelStyle)).left().row();
+        table.add(new Label("|  Rating: " + averageRating, labelStyle)).left().row();
+        table.add(new Label(buildLine(higestCount), labelStyle)).left().row();
+        table.add(new Label("|  " + workingHoursTitle, labelStyle)).left().row();
         table.add(new Label(workingHoursText.toString(), labelStyle)).left().row();
-        table.add(new Label("   " + tagsText.toString(), labelStyle)).left().row();
-        table.add(new Label("   " + menuDetails.toString(), labelStyle)).left().row();
+        table.add(new Label(buildLine(higestCount), labelStyle)).left().row();
+        table.add(new Label("|  " + tagsText.toString(), labelStyle)).left().row();
+        table.add(new Label(buildLine(higestCount), labelStyle)).left().row();
+        table.add(new Label("|  " + menuDetails.toString(), labelStyle)).left().row();
+        table.add(new Label(buildLine(higestCount), labelStyle)).left().row();
 
         // Set up scrollable window
         ScrollPane scrollPane = new ScrollPane(table, skin);
@@ -175,6 +199,19 @@ public class InfoScreen implements Screen {
         // Add back button to stage
         window.add(backButton).bottom().left().pad(10);
         stage.addActor(window);
+    }
+
+    private int getHigerCount(int higestCount, String name) {
+        return name.length() > higestCount ? name.length() : higestCount;
+    }
+
+    private String buildLine(int length) {
+        length *= 1.8;
+        StringBuilder line = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            line.append("-");
+        }
+        return line.toString();
     }
 
     @Override
