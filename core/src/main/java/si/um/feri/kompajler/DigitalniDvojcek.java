@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import java.util.Map;
 
 import si.um.feri.kompajler.assets.AssetDescriptors;
+import si.um.feri.kompajler.config.MqttConfig;
 import si.um.feri.kompajler.screen.GameplayScreen;
 import si.um.feri.kompajler.screen.MapScreen;
 import si.um.feri.kompajler.utils.Constants;
@@ -31,6 +32,7 @@ public class DigitalniDvojcek extends Game {
 
     @Override
     public void create() {
+        MqttConfig.getInstance().startMqttClient();
         batch = new SpriteBatch();
 
         assetManager = new AssetManager();
